@@ -1,0 +1,116 @@
+<!DOCTYPE html><html lang="zh"> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="/favicon.png"><meta name="generator" content="Astro v4.10.3"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="Hi! Jazee" href="https://jaze.top/rss.xml"><!-- Canonical URL --><link rel="canonical" href="https://jaze.top/posts/wear-card/"><!-- Primary Meta Tags --><title>腕上饭卡—手表模拟全加密卡 - Hi! Jazee</title><meta name="title" content="腕上饭卡—手表模拟全加密卡 - Hi! Jazee"><meta name="description" content="适用于能开通空白门卡的，带NFC功能的手表/手环模拟门卡/饭卡 - Jazee's personal blog. Powered by Astro Blog Theme Blur."><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://jaze.top/posts/wear-card/"><meta property="og:title" content="腕上饭卡—手表模拟全加密卡 - Hi! Jazee"><meta property="og:description" content="适用于能开通空白门卡的，带NFC功能的手表/手环模拟门卡/饭卡 - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta property="og:image" content="https://jaze.top/avatar.png"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://jaze.top/posts/wear-card/"><meta property="twitter:title" content="腕上饭卡—手表模拟全加密卡 - Hi! Jazee"><meta property="twitter:description" content="适用于能开通空白门卡的，带NFC功能的手表/手环模拟门卡/饭卡 - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta property="twitter:image" content="https://jaze.top/avatar.png"><link rel="stylesheet" href="/_astro/_page_.XecQjswh.css"><script type="module" src="/_astro/hoisted.B5dIDF1B.js"></script></head> <body> <header class="fixed h-16 w-full blur-global"> <nav class="container-global h-full flex items-center"> <h1 class="text-xl font-bold cursor-pointer"> <a href="/">Hi! Jazee</a> </h1> <div class="ml-auto max-sm:hidden"> <a class="ml-8 hover:text-secondary transition-all" href="/projects">Projects</a><a class="ml-8 hover:text-secondary transition-all" href="/links">Links</a><a class="ml-8 hover:text-secondary transition-all" href="/about">About</a> </div> <div class="ml-auto hidden max-sm:flex icon-button cursor-pointer relative group"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 m-auto" data-icon="material-symbols:menu-rounded">  <symbol id="ai:material-symbols:menu-rounded"><path fill="currentColor" d="M4 18q-.425 0-.712-.288T3 17t.288-.712T4 16h16q.425 0 .713.288T21 17t-.288.713T20 18zm0-5q-.425 0-.712-.288T3 12t.288-.712T4 11h16q.425 0 .713.288T21 12t-.288.713T20 13zm0-5q-.425 0-.712-.288T3 7t.288-.712T4 6h16q.425 0 .713.288T21 7t-.288.713T20 8z"/></symbol><use xlink:href="#ai:material-symbols:menu-rounded"></use>  </svg> <div class="absolute top-8 -left-full rounded-xl shadow-xl bg-base hidden group-hover:block animate-in fade-in"> <a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/projects"> Projects <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <symbol id="ai:material-symbols:chevron-right-rounded"><path fill="currentColor" d="M12.6 12L8.7 8.1q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7z"/></symbol><use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/links"> Links <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/about"> About <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a> </div> </div> <button id="theme" class="ml-8 max-sm:ml-4 icon-button"></button> </nav> </header> <script>
+    const light = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 15q1.25 0 2.125-.875T15 12t-.875-2.125T12 9t-2.125.875T9 12t.875 2.125T12 15m0 2q-2.075 0-3.537-1.463T7 12t1.463-3.537T12 7t3.538 1.463T17 12t-1.463 3.538T12 17M2 13q-.425 0-.712-.288T1 12t.288-.712T2 11h2q.425 0 .713.288T5 12t-.288.713T4 13zm18 0q-.425 0-.712-.288T19 12t.288-.712T20 11h2q.425 0 .713.288T23 12t-.288.713T22 13zm-8-8q-.425 0-.712-.288T11 4V2q0-.425.288-.712T12 1t.713.288T13 2v2q0 .425-.288.713T12 5m0 18q-.425 0-.712-.288T11 22v-2q0-.425.288-.712T12 19t.713.288T13 20v2q0 .425-.288.713T12 23M5.65 7.05L4.575 6q-.3-.275-.288-.7t.288-.725q.3-.3.725-.3t.7.3L7.05 5.65q.275.3.275.7t-.275.7t-.687.288t-.713-.288M18 19.425l-1.05-1.075q-.275-.3-.275-.712t.275-.688q.275-.3.688-.287t.712.287L19.425 18q.3.275.288.7t-.288.725q-.3.3-.725.3t-.7-.3M16.95 7.05q-.3-.275-.288-.687t.288-.713L18 4.575q.275-.3.7-.288t.725.288q.3.3.3.725t-.3.7L18.35 7.05q-.3.275-.7.275t-.7-.275M4.575 19.425q-.3-.3-.3-.725t.3-.7l1.075-1.05q.3-.275.712-.275t.688.275q.3.275.288.688t-.288.712L6 19.425q-.275.3-.7.288t-.725-.288M12 12"/></svg>'
+    const dark = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21q-3.775 0-6.387-2.613T3 12q0-3.45 2.25-5.988T11 3.05q.325-.05.575.088t.4.362t.163.525t-.188.575q-.425.65-.638 1.375T11.1 7.5q0 2.25 1.575 3.825T16.5 12.9q.775 0 1.538-.225t1.362-.625q.275-.175.563-.162t.512.137q.25.125.388.375t.087.6q-.35 3.45-2.937 5.725T12 21m0-2q2.2 0 3.95-1.213t2.55-3.162q-.5.125-1 .2t-1 .075q-3.075 0-5.238-2.163T9.1 7.5q0-.5.075-1t.2-1q-1.95.8-3.163 2.55T5 12q0 2.9 2.05 4.95T12 19m-.25-6.75"/></svg>'
+
+    const switchTheme = (theme) => {
+        if (theme === "light") {
+            document.body.classList.remove("dark");
+            document.body.classList.add("light");
+        } else {
+            document.body.classList.remove("light");
+            document.body.classList.add("dark");
+        }
+    }
+
+    let theme = (() => {
+        if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
+            return localStorage.getItem("theme");
+        }
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+        }
+        return "light";
+    })();
+
+    const themeButton = document.getElementById("theme");
+    if (theme === "light") {
+        switchTheme("light")
+        themeButton.innerHTML = light
+    } else {
+        switchTheme("dark")
+        themeButton.innerHTML = dark
+    }
+    localStorage.setItem("theme", theme);
+
+    themeButton.addEventListener("click", () => {
+        if (theme === "light") {
+            switchTheme("dark")
+            themeButton.innerHTML = dark
+            theme = "dark";
+        } else {
+            switchTheme("light")
+            themeButton.innerHTML = light
+            theme = "light";
+        }
+        localStorage.setItem("theme", theme);
+    });
+</script>  <main class="mt-20 mb-4"> <div class="container-global flex items-start"> <aside class="bg-base transition-all basis-[16rem] shrink-0 rounded-xl max-md:hidden sticky top-20 mr-4">  <div class="p-2"> <ul> <li><a class="px-2 menu-item" href="#腕上饭卡—手表模拟全加密卡">腕上饭卡—手表模拟全加密卡</a></li> <li><a class="pl-6 pr-2 menu-item" href="#准备">准备</a></li><li><a class="pl-6 pr-2 menu-item" href="#开始破解">开始破解</a></li><li><a class="pl-6 pr-2 menu-item" href="#提取密钥">提取密钥</a></li><li><a class="pl-6 pr-2 menu-item" href="#模拟饭卡">模拟饭卡</a></li><li><a class="pl-6 pr-2 menu-item" href="#完成">完成</a></li><li><a class="pl-6 pr-2 menu-item" href="#排障">排障</a></li><li><a class="pl-6 pr-2 menu-item" href="#补充21102">补充（21.10.2）</a></li><li><a class="pl-6 pr-2 menu-item" href="#结尾">结尾</a></li> </ul> </div>  </aside>   <div class="grow"> <article class="article-global"> <h1 id="腕上饭卡—手表模拟全加密卡">腕上饭卡—手表模拟全加密卡</h1> <p>适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
+<p>本教程适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
+<p>先上成品图（以<strong>小米手表</strong>为例）</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/4e6e2d22b8dc64ad333724ae7c413c7f.webp" alt=""></p>
+<p>在开始模拟<strong>饭卡</strong>前，请确认以下几点，否则可能会导致模拟/刷卡失败</p>
+<ul>
+<li>确保为<strong>联网</strong>卡，即卡中的金额等数据储存在云端，使用手表刷卡时，实体卡中的金额也会<strong>同步</strong>变化。（被请喝茶了**概不负责
+** :) ）</li>
+<li>确保读卡器不会读取卡片的<strong>0扇区</strong>（含厂商信息），因为大部分卡片模拟无法写入</li>
+<li>可以先用<strong>Mifare</strong>读取下卡片的标签信息，如果是SAK08基本可以模拟（国产半加密卡几乎无解，详见下方<strong>补充</strong>）</li>
+</ul>
+<h2 id="准备">准备</h2>
+<p>1.<strong>PN532</strong>套件，淘宝价格30元左右，需要USB转TTL，记得让卖家<strong>焊接</strong>好</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/05a4ce64ed6c26bfd188633c913ec4bc.webp" alt=""></p>
+<p>2.Windows平台电脑（此处仅提供windows平台套件）</p>
+<p>3.全功能NFC手机一台（以<strong>小米8</strong>为例），安装好<a href="https://www.icaria.de/mct/releases/">Mifare Classic Tool</a>（建议最新版本）</p>
+<p>4.驱动程序 下载地址：<a href="https://jmzzz.lanzout.com/iiQ7Alkh6ba">https://jmzzz.lanzout.com/iiQ7Alkh6ba</a> （2022/01/24更新）</p>
+<p>5.操作程序 下载地址：<a href="https://jmzzz.lanzout.com/iLYV6lkxi9g">https://jmzzz.lanzout.com/iLYV6lkxi9g</a>（2022/01/24更新）</p>
+<h2 id="开始破解">开始破解</h2>
+<p>1.安装好驱动后，将PN532模块连接到PC，打开<strong>设备管理器</strong>，记录下<strong>端口</strong></p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/989c94594a793c1fda19b1a7ffd18700.webp" alt=""></p>
+<p>2.用<strong>记事本</strong>打开532破解全加密\破解\libnfc.conf，修改成对应的<strong>端口</strong></p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/96c7eb8fa6bbdd88bc94a5a1eb98e60d.webp" alt=""></p>
+<p>3.将饭卡放置在PN532模块上，打开破解内的.exe程序，点击<strong>全加密卡破解密钥</strong>，直到连续出现<strong>3次</strong>及以上的密钥（Key
+A）并复制下来，并关闭CMD窗口</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/a07ca19d6995f456320c575587d2f9a1.webp" alt=""></p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/b165ba29b3cbfd5b1e63a3b978023d36.webp" alt=""></p>
+<p>4.将Key A使用已知密钥读取，跑Key B（大概几分钟就能搞定）</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/d459c6deb59aef32e1d58ea69e332167.webp" alt=""></p>
+<p>成功之后会在该目录下生成<strong>key.dump</strong></p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/adee036bcff76041d7729487e41a054e.webp" alt=""></p>
+<h2 id="提取密钥">提取密钥</h2>
+<p>手表无法直接模拟全加密的饭卡，因此还需要提取饭卡的密钥</p>
+<p>1.打开532破解全加密\数据\Dump2Text.exe，将刚刚得到的key.dump转换为.txt文本</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/0863d5238bfb0a2b0f844cc8f638ebf3.webp" alt=""></p>
+<p>2.打开key.dump.txt，将里面的16组密钥复制出来到另一个新建的.txt文档（全为F的可以省略）</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/c0640564ea47db6ac2ed06fd01beb7f0.webp" alt=""></p>
+<h2 id="模拟饭卡">模拟饭卡</h2>
+<p>1.手机上打开打开NFC功能，打开<a href="https://www.icaria.de/mct/releases/">Mifare Classic Tool</a>
+，选择编辑/新建密钥文件→新建文件→将密钥写入→保存（如果不能一次性写入的话，可以一行一行写入）</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/ff1b6a78e818a49aa3e867d99c614289.webp" alt=""></p>
+<p>全部写入之后保存</p>
+<p>2.选择读标签→将你刚刚的密钥勾上→将饭卡放在手机NFC的读取区域→开始映射及读取标签</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/c342fe60d035bd17c682875d4c4df4e5.webp" alt=""></p>
+<p>3.将读取出来的数据保存（所有扇区都能读取出来才算成功哦）</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/d85bcdd3372406f05e06accb22551810.webp" alt=""></p>
+<p>4.打开<strong>小米穿戴</strong>→我的→卡包→添加新门卡→空白门卡</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/b3ae09e12cfe2761867a9ba61e345432.webp" alt=""></p>
+<p>5.回到Mifare，选择写标签→选择转储→选所有扇区→选刚刚你保存的转储文件→将手表放在手机NFC读取区域→写入</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/f26054a0df6965e512ae111b966691bc.webp" alt=""></p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/7c5d37aec03a0d17dcd173f7168c7670.webp" alt=""></p>
+<h2 id="完成">完成</h2>
+<p>接下来你就能拿着你的手环/手表去食堂/商店刷卡了ヾ(•ω•`)o</p>
+<p>亲测在食堂/商店/热水处可以使用息屏支付，且不会被查水表，充值时可以使用网上充值和原饭卡现金充值</p>
+<h2 id="排障">排障</h2>
+<p>如果遇到该驱动问题，可以右键-属性-驱动程序-更新驱动程序-浏览我的电脑以查找驱动程序-从列表中获取-选2008年的安装即可</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/da2c4eaa77abf35152b3f16e2758c5d3.webp" alt=""></p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/831060f3503afd7b2375c8cfe97300de.webp" alt=""></p>
+<h2 id="补充21102">补充（21.10.2）</h2>
+<p>关于<strong>国产半加密卡</strong>，因为没有漏洞，用pn532的话只能暴力解卡，费时费力，只能碰碰运气</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/bcd588562353adaabc7bba59378e11e1.webp" alt=""></p>
+<p>使用默认密钥读取结果</p>
+<p><img src="https://blog-cdn.jaze.top/2023/11/c3413886b68bc7472195d0d44ae8b0e6.webp" alt=""></p>
+<p>全加密破解时卡住</p>
+<h2 id="结尾">结尾</h2>
+<p>部分内容参考自酷安@赵s哥等人的动态，感谢</p>
+<p>驱动及操作程序来自网络，仅供交流学习使用</p>
+<p>本教程还有存在有不完善的地方，欢迎在评论区补充</p> </article> <div class="bg-base transition-all rounded-xl px-6 pt-2 pb-4 mt-4"> <div id="comment" class="h-64"></div> </div> </div>  </div> </main>  <footer class="mt-auto bg-base transition-all h-16 shrink-0 py-2"> <div class="container-global text-secondary text-sm flex flex-col justify-center h-full"> <div>&copy; 2024 Jazee</div> <div>
+Powered by <a class="text-primary hover:text-secondary hover:underline transition-all" href="https://github.com/Jazee6/astro-blur" target="_blank">Astro
+            Blur</a> 0.0.1 </div> </div> </footer> </body></html>  <script src="https://cdn.staticfile.net/twikoo/1.6.36/twikoo.all.min.js"></script> 

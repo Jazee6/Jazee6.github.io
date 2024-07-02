@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://jaze.top/sitemap-index.xml
