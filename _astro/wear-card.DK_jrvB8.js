@@ -1,2 +1,0 @@
-const __vite__fileDeps=["_astro/wear-card.DrbGpUzB.js","_astro/render-template.CwHpBMTt.js","_astro/hoisted.BzVVTRnB.js","_astro/config.DPl4AVvd.js"],__vite__mapDeps=i=>i.map(i=>__vite__fileDeps[i]);
-import{_ as t}from"./hoisted.BzVVTRnB.js";import"./config.DPl4AVvd.js";async function o(){return t(()=>import("./wear-card.DrbGpUzB.js"),__vite__mapDeps([0,1,2,3]))}const e="@@ASTRO-LINKS@@",c="@@ASTRO-STYLES@@",r="@@ASTRO-SCRIPTS@@",n={__astroPropagation:!0,getMod:o,collectedLinks:e,collectedStyles:c,collectedScripts:r};export{n as default};

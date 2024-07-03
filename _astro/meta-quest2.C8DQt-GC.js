@@ -1,4 +1,4 @@
-import{c as e,r as p,m as a}from"./render-template.CwHpBMTt.js";import{u as o}from"./hoisted.BzVVTRnB.js";import"./config.DPl4AVvd.js";const n=`<h2 id="故事">故事</h2>
+import{c as e,r as p,m as a}from"./render-template.B-JjCG7G.js";import{u as o}from"./hoisted.BItQZj2y.js";import"./config.DPl4AVvd.js";const n=`<h2 id="故事">故事</h2>
 <p>为什么买Quest 2？去年暑假，我的选择有</p>
 <ul>
 <li>Nintendo Switch</li>
@@ -120,7 +120,7 @@ Free 资源较全）</li>
 <p>日亚128</p>
 <h2 id="后记">后记</h2>
 <p><img src="https://blog-cdn.jaze.top/2024/01/24f922310fa9d5f71116320da09be84b.webp" alt=""></p>
-<p>离Meta还有多远？</p>`,s={title:"Meta Quest 2 VR 简评+指南",description:"Meta Quest 2 VR 简评+指南",pubDate:"2022-02-15T00:00:00.000Z",heroImage:"https://blog-cdn.jaze.top/2024/01/662f4075c7e940799a48a97e284a9307.webp"},l="/home/runner/work/astro-blur/astro-blur/src/content/posts/meta-quest2.md",c=void 0;function g(){return`
+<p>离Meta还有多远？</p>`,s={title:"Meta Quest 2 VR 简评+指南",description:"Meta Quest 2 VR 简评+指南",pubDate:"2022-02-15T00:00:00.000Z",heroImage:"https://blog-cdn.jaze.top/2024/01/662f4075c7e940799a48a97e284a9307.webp",lastModified:"2024-07-03T21:35:54+08:00"},l="/home/runner/work/astro-blur/astro-blur/src/content/posts/meta-quest2.md",c=void 0;function g(){return`
 ## 故事
 
 为什么买Quest 2？去年暑假，我的选择有
