@@ -1,4 +1,4 @@
-import{c as e,r as p,m as a}from"./render-template.B8Ab-BuK.js";import{u as o}from"./hoisted.B5dIDF1B.js";import"./config.ByyizjuX.js";const t=`<p>适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
+import{c as e,r as p,m as a}from"./render-template.CwHpBMTt.js";import{u as o}from"./hoisted.BzVVTRnB.js";import"./config.DPl4AVvd.js";const t=`<p>适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
 <p>本教程适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
 <p>先上成品图（以<strong>小米手表</strong>为例）</p>
 <p><img src="https://blog-cdn.jaze.top/2023/11/4e6e2d22b8dc64ad333724ae7c413c7f.webp" alt=""></p>

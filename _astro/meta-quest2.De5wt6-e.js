@@ -1,4 +1,4 @@
-import{c as e,r as p,m as a}from"./render-template.B8Ab-BuK.js";import{u as o}from"./hoisted.B5dIDF1B.js";import"./config.ByyizjuX.js";const n=`<h2 id="故事">故事</h2>
+import{c as e,r as p,m as a}from"./render-template.CwHpBMTt.js";import{u as o}from"./hoisted.BzVVTRnB.js";import"./config.DPl4AVvd.js";const n=`<h2 id="故事">故事</h2>
 <p>为什么买Quest 2？去年暑假，我的选择有</p>
 <ul>
 <li>Nintendo Switch</li>

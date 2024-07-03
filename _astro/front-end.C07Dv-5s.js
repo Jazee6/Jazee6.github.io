@@ -1,4 +1,4 @@
-import{c as a,r as l,m as i}from"./render-template.B8Ab-BuK.js";import{u as r}from"./hoisted.B5dIDF1B.js";import"./config.ByyizjuX.js";const n=`<h2 id="js">JS</h2>
+import{c as a,r as l,m as i}from"./render-template.CwHpBMTt.js";import{u as r}from"./hoisted.BzVVTRnB.js";import"./config.DPl4AVvd.js";const n=`<h2 id="js">JS</h2>
 <h3 id="prototype">prototype</h3>
 <ul>
 <li>每个函数都有一个prototype属性，指向一个对象，这个对象的所有属性和方法，都会被构造函数的实例继承</li>
