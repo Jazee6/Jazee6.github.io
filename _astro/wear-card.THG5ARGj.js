@@ -1,4 +1,4 @@
-import{c as e,r as p,m as a}from"./render-template.B-JjCG7G.js";import{u as o}from"./hoisted.BItQZj2y.js";import"./config.DPl4AVvd.js";const t=`<p>适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
+import{c as e,r as p,m as a}from"./render-template.G6rt3_jI.js";import{u as o}from"./hoisted.Dmx2lyIB.js";import"./config.DPl4AVvd.js";const t=`<p>适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
 <p>本教程适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
 <p>先上成品图（以<strong>小米手表</strong>为例）</p>
 <p><img src="https://blog-cdn.jaze.top/2023/11/4e6e2d22b8dc64ad333724ae7c413c7f.webp" alt=""></p>
@@ -65,7 +65,7 @@ A）并复制下来，并关闭CMD窗口</p>
 <h2 id="结尾">结尾</h2>
 <p>部分内容参考自酷安@赵s哥等人的动态，感谢</p>
 <p>驱动及操作程序来自网络，仅供交流学习使用</p>
-<p>本教程还有存在有不完善的地方，欢迎在评论区补充</p>`,c={title:"腕上饭卡—手表模拟全加密卡",description:"适用于能开通空白门卡的，带NFC功能的手表/手环模拟门卡/饭卡",pubDate:"2021-02-12T00:00:00.000Z",heroImage:"https://blog-cdn.jaze.top/2023/11/4e6e2d22b8dc64ad333724ae7c413c7f.webp",lastModified:"2024-07-03T21:35:54+08:00"},b="/home/runner/work/astro-blur/astro-blur/src/content/posts/wear-card.md",d=void 0;function z(){return`
+<p>本教程还有存在有不完善的地方，欢迎在评论区补充</p>`,c={title:"腕上饭卡—手表模拟全加密卡",description:"适用于能开通空白门卡的，带NFC功能的手表/手环模拟门卡/饭卡",pubDate:"2021-02-12T00:00:00.000Z",heroImage:"https://blog-cdn.jaze.top/2023/11/4e6e2d22b8dc64ad333724ae7c413c7f.webp",lastModified:"2024-07-27T13:12:35+08:00"},b="/home/runner/work/astro-blur/astro-blur/src/content/posts/wear-card.md",d=void 0;function z(){return`
 适用于能开通**空白门卡**的，带**NFC**功能的手表/手环模拟门卡/饭卡
 
 本教程适用于能开通**空白门卡**的，带**NFC**功能的手表/手环模拟门卡/饭卡

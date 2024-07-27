@@ -1,4 +1,4 @@
-import{c as a,r as l,m as i}from"./render-template.B-JjCG7G.js";import{u as r}from"./hoisted.BItQZj2y.js";import"./config.DPl4AVvd.js";const n=`<h2 id="js">JS</h2>
+import{c as a,r as l,m as i}from"./render-template.G6rt3_jI.js";import{u as r}from"./hoisted.Dmx2lyIB.js";import"./config.DPl4AVvd.js";const n=`<h2 id="js">JS</h2>
 <h3 id="prototype">prototype</h3>
 <ul>
 <li>每个函数都有一个prototype属性，指向一个对象，这个对象的所有属性和方法，都会被构造函数的实例继承</li>
@@ -275,7 +275,7 @@ import{c as a,r as l,m as i}from"./render-template.B-JjCG7G.js";import{u as r}fr
 <span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">    }</span></span>
 <span class="line"><span style="color:#A626A4;--shiki-dark:#C678DD">    return</span><span style="color:#383A42;--shiki-dark:#E06C75"> result</span></span>
 <span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">}</span></span>
-<span class="line"></span></code></pre>`,o={title:"前端八股",description:"前端八股",pubDate:"2023-11-09T00:00:00.000Z",isDraft:!0,lastModified:"2024-07-03T21:35:54+08:00"},e="/home/runner/work/astro-blur/astro-blur/src/content/posts/front-end.md",p=void 0;function y(){return`
+<span class="line"></span></code></pre>`,o={title:"前端八股",description:"前端八股",pubDate:"2023-11-09T00:00:00.000Z",isDraft:!0,lastModified:"2024-07-27T13:12:35+08:00"},e="/home/runner/work/astro-blur/astro-blur/src/content/posts/front-end.md",p=void 0;function y(){return`
 ## JS
 
 ### prototype
