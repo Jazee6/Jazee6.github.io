@@ -1,0 +1,2 @@
+const __vite__fileDeps=["_astro/about.libcRyO_.js","_astro/hoisted.4mE1ueNH.js","_astro/config.7_d3ayKu.js","_astro/astro/assets-service.TN3WqOlA.js","_astro/astro-component.CB85aT8k.js"],__vite__mapDeps=i=>i.map(i=>__vite__fileDeps[i]);
+import{_ as t}from"./astro/assets-service.TN3WqOlA.js";async function o(){return t(()=>import("./about.libcRyO_.js"),__vite__mapDeps([0,1,2,3,4]))}const e="@@ASTRO-LINKS@@",c="@@ASTRO-STYLES@@",r="@@ASTRO-SCRIPTS@@",l={__astroPropagation:!0,getMod:o,collectedLinks:e,collectedStyles:c,collectedScripts:r};export{l as default};

@@ -12,21 +12,75 @@
 </script><script>
     const setTheme = (theme) => {
         document.documentElement.classList.add(theme);
-    }
-
-    let theme = (() => {
-        if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
-            return localStorage.getItem("theme");
         }
-        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-            return "dark";
-        }
-        return "light";
-    })();
 
-    theme === "light" ? setTheme("light") : setTheme("dark");
-    localStorage.setItem("theme", theme);
-</script><link rel="stylesheet" href="/_astro/_page_.BXNUzB5X.css"><script type="module" src="/_astro/hoisted.CXSBFWf1.js"></script></head> <body> <header class="fixed h-16 w-full blur-global"> <div class="container-global h-full flex items-center"> <div class="text-xl font-bold cursor-pointer"> <a href="/">Hi! Jazee</a> </div> <nav class="ml-auto max-sm:hidden"> <a class="ml-8 hover:text-secondary transition-all" href="/projects">Projects</a><a class="ml-8 hover:text-secondary transition-all" href="/links">Links</a><a class="ml-8 hover:text-secondary transition-all" href="/about">About</a> </nav> <div class="ml-auto hidden max-sm:flex icon-button cursor-pointer relative group"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 m-auto" data-icon="material-symbols:menu-rounded">  <symbol id="ai:material-symbols:menu-rounded"><path fill="currentColor" d="M4 18q-.425 0-.712-.288T3 17t.288-.712T4 16h16q.425 0 .713.288T21 17t-.288.713T20 18zm0-5q-.425 0-.712-.288T3 12t.288-.712T4 11h16q.425 0 .713.288T21 12t-.288.713T20 13zm0-5q-.425 0-.712-.288T3 7t.288-.712T4 6h16q.425 0 .713.288T21 7t-.288.713T20 8z"/></symbol><use xlink:href="#ai:material-symbols:menu-rounded"></use>  </svg> <nav class="absolute top-8 -left-full rounded-xl shadow-xl bg-base hidden group-hover:block animate-in fade-in"> <a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/projects"> Projects <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <symbol id="ai:material-symbols:chevron-right-rounded"><path fill="currentColor" d="M12.6 12L8.7 8.1q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7z"/></symbol><use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/links"> Links <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/about"> About <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a> </nav> </div> <button id="theme" class="ml-8 max-sm:ml-4 icon-button"></button> </div> </header> <script>
+        let theme = (() => {
+            if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
+                return localStorage.getItem("theme");
+                }
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                return "dark";
+                }
+            return "light";
+            })();
+
+        theme === "light" ? setTheme("light") : setTheme("dark");
+        localStorage.setItem("theme", theme);
+</script><link rel="stylesheet" href="/_astro/_page_.D0sZceME.css"><script type="module" src="/_astro/hoisted.4mE1ueNH.js"></script></head> <body> <div id="search-container" class="fixed hidden inset-0 z-10 backdrop-blur animate-in fade-in"> <div class="absolute top-16 left-1/2 -translate-x-1/2 container-global w-full h-full"> <form class="w-3/4 mx-auto max-md:w-full animate-in slide-in-from-top"> <label> <input name="search" autocomplete="off" placeholder="Search..." class="w-full outline-0 bg-base transition-all rounded-xl h-16 p-4 shadow-xl text-xl"> </label> </form> <div id="search-results" class="w-3/4 mx-auto max-md:w-full h-full overflow-y-auto rounded-xl mt-1"></div> </div> </div> <script>
+    const searchContainer = document.querySelector("#search-container");
+    const searchInput = searchContainer?.querySelector("input")
+    searchContainer?.addEventListener("click", (e) => {
+        if (e.target !== searchInput) {
+            searchContainer.classList.add("hidden")
+        }
+    })
+    searchContainer?.querySelector("form")?.addEventListener("submit", (e) => {
+        e.preventDefault()
+    })
+    searchInput.addEventListener("input", async e => {
+        if (e.target.dataset.loaded !== 'true') {
+            e.target.dataset.loaded = 'true'
+            window.pagefind = await import("/pagefind/pagefind.js");
+        }
+
+        const input = e.target.value.trim()
+        if (input.length) {
+            const search = await window.pagefind.search(input)
+            const searchResults = document.querySelector("#search-results")
+            searchResults.innerHTML = ""
+            for (const result of search.results) {
+                const data = await result.data()
+                searchResults.innerHTML += `
+                    <a href="${data.url}" class="block px-4 py-2 rounded-xl bg-base/80 blur-global animate-in fade-in mt-1 first:mt-0 hover:bg-base transition-all">
+                        <h2 class="text-xl font-bold line-clamp-1">${data.meta.title}</h2>
+                        <p class="line-clamp-3">${data.excerpt}</p>
+                    </a>
+                `
+            }
+        }
+    })
+</script> <header class="fixed h-16 w-full blur-global"> <div class="container-global h-full flex items-center"> <div class="text-xl font-bold cursor-pointer"> <a href="/">Hi! Jazee</a> </div> <nav class="ml-auto max-sm:hidden"> <a class="ml-8 hover:text-secondary transition-all" href="/projects">Projects</a><a class="ml-8 hover:text-secondary transition-all" href="/links">Links</a><a class="ml-8 hover:text-secondary transition-all" href="/about">About</a> </nav> <div class="ml-auto hidden max-sm:flex icon-button cursor-pointer relative group"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 m-auto" data-icon="material-symbols:menu-rounded">  <symbol id="ai:material-symbols:menu-rounded"><path fill="currentColor" d="M4 18q-.425 0-.712-.288T3 17t.288-.712T4 16h16q.425 0 .713.288T21 17t-.288.713T20 18zm0-5q-.425 0-.712-.288T3 12t.288-.712T4 11h16q.425 0 .713.288T21 12t-.288.713T20 13zm0-5q-.425 0-.712-.288T3 7t.288-.712T4 6h16q.425 0 .713.288T21 7t-.288.713T20 8z"/></symbol><use xlink:href="#ai:material-symbols:menu-rounded"></use>  </svg> <nav class="absolute top-8 -left-full rounded-xl shadow-xl bg-base hidden group-hover:block animate-in fade-in"> <a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/projects"> Projects <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <symbol id="ai:material-symbols:chevron-right-rounded"><path fill="currentColor" d="M12.6 12L8.7 8.1q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7z"/></symbol><use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/links"> Links <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/about"> About <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">  <use xlink:href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a> </nav> </div> <button id="search" class="ml-4 icon-button"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="block w-6 h-6 m-auto" data-icon="material-symbols:search-rounded">  <symbol id="ai:material-symbols:search-rounded"><path fill="currentColor" d="M9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l5.6 5.6q.275.275.275.7t-.275.7t-.7.275t-.7-.275l-5.6-5.6q-.75.6-1.725.95T9.5 16m0-2q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"/></symbol><use xlink:href="#ai:material-symbols:search-rounded"></use>  </svg> </button> <button id="theme" class="ml-2 max-sm:ml-4 icon-button"></button> </div> </header> <script>
+    const searchButton = document.querySelector("#search");
+    searchButton.addEventListener("click", () => {
+        const searchContainer = document.querySelector("#search-container")
+        searchContainer.classList.toggle("hidden")
+        searchContainer.querySelector("input").focus()
+    })
+
+    document.documentElement.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
+            const searchContainer = document.querySelector("#search-container")
+            searchContainer.classList.remove("hidden")
+            setTimeout(() => {
+                searchContainer.querySelector("input").focus()
+            })
+        }
+        if (e.key === "Escape") {
+            const searchContainer = document.querySelector("#search-container")
+            searchContainer.classList.add("hidden")
+        }
+    })
+</script> <script>
     const light = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 15q1.25 0 2.125-.875T15 12t-.875-2.125T12 9t-2.125.875T9 12t.875 2.125T12 15m0 2q-2.075 0-3.537-1.463T7 12t1.463-3.537T12 7t3.538 1.463T17 12t-1.463 3.538T12 17M2 13q-.425 0-.712-.288T1 12t.288-.712T2 11h2q.425 0 .713.288T5 12t-.288.713T4 13zm18 0q-.425 0-.712-.288T19 12t.288-.712T20 11h2q.425 0 .713.288T23 12t-.288.713T22 13zm-8-8q-.425 0-.712-.288T11 4V2q0-.425.288-.712T12 1t.713.288T13 2v2q0 .425-.288.713T12 5m0 18q-.425 0-.712-.288T11 22v-2q0-.425.288-.712T12 19t.713.288T13 20v2q0 .425-.288.713T12 23M5.65 7.05L4.575 6q-.3-.275-.288-.7t.288-.725q.3-.3.725-.3t.7.3L7.05 5.65q.275.3.275.7t-.275.7t-.687.288t-.713-.288M18 19.425l-1.05-1.075q-.275-.3-.275-.712t.275-.688q.275-.3.688-.287t.712.287L19.425 18q.3.275.288.7t-.288.725q-.3.3-.725.3t-.7-.3M16.95 7.05q-.3-.275-.288-.687t.288-.713L18 4.575q.275-.3.7-.288t.725.288q.3.3.3.725t-.3.7L18.35 7.05q-.3.275-.7.275t-.7-.275M4.575 19.425q-.3-.3-.3-.725t.3-.7l1.075-1.05q.3-.275.712-.275t.688.275q.3.275.288.688t-.288.712L6 19.425q-.275.3-.7.288t-.725-.288M12 12"/></svg>'
     const dark = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21q-3.775 0-6.387-2.613T3 12q0-3.45 2.25-5.988T11 3.05q.325-.05.575.088t.4.362t.163.525t-.188.575q-.425.65-.638 1.375T11.1 7.5q0 2.25 1.575 3.825T16.5 12.9q.775 0 1.538-.225t1.362-.625q.275-.175.563-.162t.512.137q.25.125.388.375t.087.6q-.35 3.45-2.937 5.725T12 21m0-2q2.2 0 3.95-1.213t2.55-3.162q-.5.125-1 .2t-1 .075q-3.075 0-5.238-2.163T9.1 7.5q0-.5.075-1t.2-1q-1.95.8-3.163 2.55T5 12q0 2.9 2.05 4.95T12 19m-.25-6.75"/></svg>'
 
@@ -34,7 +88,7 @@
         theme === 'light' ? document.documentElement.classList.replace('dark', 'light') : document.documentElement.classList.replace('light', 'dark')
     }
 
-    const themeButton = document.getElementById("theme");
+    const themeButton = document.querySelector("#theme");
     theme === 'light' ? themeButton.innerHTML = light : themeButton.innerHTML = dark
 
     themeButton.addEventListener("click", () => {
@@ -49,7 +103,7 @@
         }
         localStorage.setItem("theme", theme);
     });
-</script>  <main class="mt-20 mb-4"> <div class="container-global flex items-start"> <aside class="bg-base transition-all basis-[16rem] shrink-0 rounded-xl max-md:hidden sticky top-20 mr-4">  <div class="p-2"> <ul> <li><a class="px-2 menu-item" href="#腕上饭卡—手表模拟全加密卡">腕上饭卡—手表模拟全加密卡</a></li> <li><a class="pl-6 pr-2 menu-item" href="#准备">准备</a></li><li><a class="pl-6 pr-2 menu-item" href="#开始破解">开始破解</a></li><li><a class="pl-6 pr-2 menu-item" href="#提取密钥">提取密钥</a></li><li><a class="pl-6 pr-2 menu-item" href="#模拟饭卡">模拟饭卡</a></li><li><a class="pl-6 pr-2 menu-item" href="#完成">完成</a></li><li><a class="pl-6 pr-2 menu-item" href="#排障">排障</a></li><li><a class="pl-6 pr-2 menu-item" href="#补充21102">补充（21.10.2）</a></li><li><a class="pl-6 pr-2 menu-item" href="#结尾">结尾</a></li> </ul> </div>  </aside>   <div class="grow"> <article class="article-global"> <h1 id="腕上饭卡—手表模拟全加密卡">腕上饭卡—手表模拟全加密卡</h1> <div class="flex space-x-4"> <div class="badge"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 mr-1" data-icon="material-symbols:edit-calendar-rounded">  <symbol id="ai:material-symbols:edit-calendar-rounded"><path fill="currentColor" d="M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V3q0-.425.288-.712T7 2t.713.288T8 3v1h8V3q0-.425.288-.712T17 2t.713.288T18 3v1h1q.825 0 1.413.588T21 6v4.025q0 .425-.288.713t-.712.287t-.712-.288t-.288-.712V10H5v10h6q.425 0 .713.288T12 21t-.288.713T11 22zm9-1v-1.65q0-.2.075-.387t.225-.338l5.225-5.2q.225-.225.5-.325t.55-.1q.3 0 .575.113t.5.337l.925.925q.2.225.313.5t.112.55t-.1.563t-.325.512l-5.2 5.2q-.15.15-.337.225T16.65 22H15q-.425 0-.712-.287T14 21m6.575-4.6l.925-.975l-.925-.925l-.95.95z"/></symbol><use xlink:href="#ai:material-symbols:edit-calendar-rounded"></use>  </svg> 2024/7/27 </div> <div class="badge"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 mr-1" data-icon="material-symbols:bar-chart-rounded">  <symbol id="ai:material-symbols:bar-chart-rounded"><path fill="currentColor" d="M17 20q-.425 0-.712-.288T16 19v-5q0-.425.288-.712T17 13h2q.425 0 .713.288T20 14v5q0 .425-.288.713T19 20zm-6 0q-.425 0-.712-.288T10 19V5q0-.425.288-.712T11 4h2q.425 0 .713.288T14 5v14q0 .425-.288.713T13 20zm-6 0q-.425 0-.712-.288T4 19v-9q0-.425.288-.712T5 9h2q.425 0 .713.288T8 10v9q0 .425-.288.713T7 20z"/></symbol><use xlink:href="#ai:material-symbols:bar-chart-rounded"></use>  </svg>  <span id="twikoo_visitors">...</span>  </div> </div> <p>适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
+</script>  <main class="mt-20 mb-4"> <div class="container-global flex items-start"> <aside class="bg-base transition-all basis-[16rem] shrink-0 rounded-xl max-md:hidden sticky top-20 mr-4">  <div class="p-2"> <ul> <li><a class="px-2 menu-item" href="#腕上饭卡—手表模拟全加密卡">腕上饭卡—手表模拟全加密卡</a></li> <li><a class="pl-6 pr-2 menu-item" href="#准备">准备</a></li><li><a class="pl-6 pr-2 menu-item" href="#开始破解">开始破解</a></li><li><a class="pl-6 pr-2 menu-item" href="#提取密钥">提取密钥</a></li><li><a class="pl-6 pr-2 menu-item" href="#模拟饭卡">模拟饭卡</a></li><li><a class="pl-6 pr-2 menu-item" href="#完成">完成</a></li><li><a class="pl-6 pr-2 menu-item" href="#排障">排障</a></li><li><a class="pl-6 pr-2 menu-item" href="#补充21102">补充（21.10.2）</a></li><li><a class="pl-6 pr-2 menu-item" href="#结尾">结尾</a></li> </ul> </div>  </aside>   <div class="grow"> <article class="article-global"> <h1 id="腕上饭卡—手表模拟全加密卡">腕上饭卡—手表模拟全加密卡</h1> <div class="flex space-x-4"> <div class="badge"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 mr-1" data-icon="material-symbols:edit-calendar-rounded">  <symbol id="ai:material-symbols:edit-calendar-rounded"><path fill="currentColor" d="M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V3q0-.425.288-.712T7 2t.713.288T8 3v1h8V3q0-.425.288-.712T17 2t.713.288T18 3v1h1q.825 0 1.413.588T21 6v4.025q0 .425-.288.713t-.712.287t-.712-.288t-.288-.712V10H5v10h6q.425 0 .713.288T12 21t-.288.713T11 22zm9-1v-1.65q0-.2.075-.387t.225-.338l5.225-5.2q.225-.225.5-.325t.55-.1q.3 0 .575.113t.5.337l.925.925q.2.225.313.5t.112.55t-.1.563t-.325.512l-5.2 5.2q-.15.15-.337.225T16.65 22H15q-.425 0-.712-.287T14 21m6.575-4.6l.925-.975l-.925-.925l-.95.95z"/></symbol><use xlink:href="#ai:material-symbols:edit-calendar-rounded"></use>  </svg> 2024/7/30 </div> <div class="badge"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 mr-1" data-icon="material-symbols:bar-chart-rounded">  <symbol id="ai:material-symbols:bar-chart-rounded"><path fill="currentColor" d="M17 20q-.425 0-.712-.288T16 19v-5q0-.425.288-.712T17 13h2q.425 0 .713.288T20 14v5q0 .425-.288.713T19 20zm-6 0q-.425 0-.712-.288T10 19V5q0-.425.288-.712T11 4h2q.425 0 .713.288T14 5v14q0 .425-.288.713T13 20zm-6 0q-.425 0-.712-.288T4 19v-9q0-.425.288-.712T5 9h2q.425 0 .713.288T8 10v9q0 .425-.288.713T7 20z"/></symbol><use xlink:href="#ai:material-symbols:bar-chart-rounded"></use>  </svg>  <span id="twikoo_visitors">...</span>  </div> </div> <p>适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
 <p>本教程适用于能开通<strong>空白门卡</strong>的，带<strong>NFC</strong>功能的手表/手环模拟门卡/饭卡</p>
 <p>先上成品图（以<strong>小米手表</strong>为例）</p>
 <p><img src="https://blog-cdn.jaze.top/2023/11/4e6e2d22b8dc64ad333724ae7c413c7f.webp" alt=""></p>
@@ -118,4 +172,4 @@ A）并复制下来，并关闭CMD窗口</p>
 <p>驱动及操作程序来自网络，仅供交流学习使用</p>
 <p>本教程还有存在有不完善的地方，欢迎在评论区补充</p> </article> <div class="bg-base transition-all rounded-xl px-6 pt-2 pb-4 mt-4"> <div id="comment" class="h-64 animate-pulse bg-back rounded-xl mt-2"></div> </div> </div>  </div> </main>  <footer class="mt-auto bg-base transition-all h-16 shrink-0 py-2"> <div class="container-global text-secondary text-sm flex flex-col justify-center h-full"> <div>&copy; 2024 Jazee</div> <div>
 Powered by <a class="text-primary hover:text-secondary hover:underline transition-all" href="https://github.com/Jazee6/astro-blur" target="_blank">Astro
-            Blur</a> 0.1.1 </div> </div> </footer> </body></html>  <script src="https://cdn.staticfile.net/twikoo/1.6.36/twikoo.all.min.js"></script> 
+            Blur</a> 0.2.0 </div> </div> </footer> </body></html>  <script src="https://cdn.staticfile.net/twikoo/1.6.36/twikoo.all.min.js"></script> 
