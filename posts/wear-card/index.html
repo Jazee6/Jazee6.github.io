@@ -12,21 +12,21 @@
 </script><script>
     const setTheme = (theme) => {
         document.documentElement.classList.add(theme);
+    }
+
+    let theme = (() => {
+        if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
+            return localStorage.getItem("theme");
         }
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+        }
+        return "light";
+    })();
 
-        let theme = (() => {
-            if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
-                return localStorage.getItem("theme");
-                }
-            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-                return "dark";
-                }
-            return "light";
-            })();
-
-        theme === "light" ? setTheme("light") : setTheme("dark");
-        localStorage.setItem("theme", theme);
-</script><link rel="stylesheet" href="/_astro/_page_.CpGruC1Q.css">
+    theme === "light" ? setTheme("light") : setTheme("dark");
+    localStorage.setItem("theme", theme);
+</script><link rel="stylesheet" href="/_astro/_page_.DYMokDO2.css">
 <style>[data-astro-image]{width:100%;height:auto;-o-object-fit:var(--fit);object-fit:var(--fit);-o-object-position:var(--pos);object-position:var(--pos);aspect-ratio:var(--w) / var(--h)}[data-astro-image=responsive]{max-width:calc(var(--w) * 1px);max-height:calc(var(--h) * 1px)}[data-astro-image=fixed]{width:calc(var(--w) * 1px);height:calc(var(--h) * 1px)}
 </style></head> <body> <div id="search-container" class="fixed hidden inset-0 z-10 backdrop-blur animate-in fade-in"> <div class="absolute top-16 left-1/2 -translate-x-1/2 container-global w-full h-full"> <form class="w-3/4 mx-auto max-md:w-full animate-in slide-in-from-top"> <label> <input name="search" autocomplete="off" placeholder="Search..." class="w-full outline-0 bg-base transition-all rounded-xl h-16 p-4 shadow-xl text-xl"> </label> </form> <div id="search-results" class="w-3/4 mx-auto max-md:w-full h-full overflow-y-auto rounded-xl mt-1"></div> </div> </div> <script>
     const searchContainer = document.querySelector("#search-container");
@@ -202,4 +202,4 @@ A）并复制下来，并关闭CMD窗口</p>
 <p>驱动及操作程序来自网络，仅供交流学习使用</p>
 <p>本教程还有存在有不完善的地方，欢迎在评论区补充</p> </article>  </div>  </div> </main>  <footer class="mt-auto bg-base transition-all h-16 shrink-0 py-2"> <div class="container-global text-secondary text-sm flex flex-col justify-center h-full"> <div>&copy; 2024 Jazee</div> <div>
 Powered by <a class="text-primary hover:text-secondary hover:underline transition-all" href="https://github.com/Jazee6/astro-blur" target="_blank">Astro
-            Blur</a> 0.3.1 </div> </div> </footer> </body></html> <script type="module">function i(t,e=100){let o;return function(...n){clearTimeout(o),o=setTimeout(()=>{t(...n)},e)}}const r=document.querySelectorAll(".menu-item"),c=i(()=>{const t=window.scrollY;if(t<84){r.forEach(e=>e.classList.remove("bg-hover")),r[0].classList.add("bg-hover"),history.replaceState(null,"",window.location.pathname);return}r.forEach(e=>{const o=e.getAttribute("href"),n=document.querySelector(o);if(n){const s=n.getBoundingClientRect().top+t-84;t>=s&&(r.forEach(l=>l.classList.remove("bg-hover")),e.classList.add("bg-hover"),history.replaceState(null,"",o))}})});document.addEventListener("scroll",c);document.addEventListener("DOMContentLoaded",c);</script>
+            Blur</a> 0.3.2 </div> </div> </footer> </body></html> <script type="module">function i(t,e=100){let o;return function(...n){clearTimeout(o),o=setTimeout(()=>{t(...n)},e)}}const r=document.querySelectorAll(".menu-item"),c=i(()=>{const t=window.scrollY;if(t<84){r.forEach(e=>e.classList.remove("bg-hover")),r[0].classList.add("bg-hover"),history.replaceState(null,"",window.location.pathname);return}r.forEach(e=>{const o=e.getAttribute("href"),n=document.querySelector(o);if(n){const s=n.getBoundingClientRect().top+t-84;t>=s&&(r.forEach(l=>l.classList.remove("bg-hover")),e.classList.add("bg-hover"),history.replaceState(null,"",o))}})});document.addEventListener("scroll",c);document.addEventListener("DOMContentLoaded",c);</script>

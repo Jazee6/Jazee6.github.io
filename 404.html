@@ -12,21 +12,21 @@
 </script><script>
     const setTheme = (theme) => {
         document.documentElement.classList.add(theme);
+    }
+
+    let theme = (() => {
+        if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
+            return localStorage.getItem("theme");
         }
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+        }
+        return "light";
+    })();
 
-        let theme = (() => {
-            if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
-                return localStorage.getItem("theme");
-                }
-            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-                return "dark";
-                }
-            return "light";
-            })();
-
-        theme === "light" ? setTheme("light") : setTheme("dark");
-        localStorage.setItem("theme", theme);
-</script><link rel="stylesheet" href="/_astro/_page_.CpGruC1Q.css"></head> <body> <div id="search-container" class="fixed hidden inset-0 z-10 backdrop-blur animate-in fade-in"> <div class="absolute top-16 left-1/2 -translate-x-1/2 container-global w-full h-full"> <form class="w-3/4 mx-auto max-md:w-full animate-in slide-in-from-top"> <label> <input name="search" autocomplete="off" placeholder="Search..." class="w-full outline-0 bg-base transition-all rounded-xl h-16 p-4 shadow-xl text-xl"> </label> </form> <div id="search-results" class="w-3/4 mx-auto max-md:w-full h-full overflow-y-auto rounded-xl mt-1"></div> </div> </div> <script>
+    theme === "light" ? setTheme("light") : setTheme("dark");
+    localStorage.setItem("theme", theme);
+</script><link rel="stylesheet" href="/_astro/_page_.DYMokDO2.css"></head> <body> <div id="search-container" class="fixed hidden inset-0 z-10 backdrop-blur animate-in fade-in"> <div class="absolute top-16 left-1/2 -translate-x-1/2 container-global w-full h-full"> <form class="w-3/4 mx-auto max-md:w-full animate-in slide-in-from-top"> <label> <input name="search" autocomplete="off" placeholder="Search..." class="w-full outline-0 bg-base transition-all rounded-xl h-16 p-4 shadow-xl text-xl"> </label> </form> <div id="search-results" class="w-3/4 mx-auto max-md:w-full h-full overflow-y-auto rounded-xl mt-1"></div> </div> </div> <script>
     const searchContainer = document.querySelector("#search-container");
     const searchInput = searchContainer?.querySelector("input")
     searchContainer?.addEventListener("click", (e) => {
@@ -135,4 +135,4 @@
 Page Not Found 🤔
 </div> </main>  <footer class="mt-auto bg-base transition-all h-16 shrink-0 py-2"> <div class="container-global text-secondary text-sm flex flex-col justify-center h-full"> <div>&copy; 2024 Jazee</div> <div>
 Powered by <a class="text-primary hover:text-secondary hover:underline transition-all" href="https://github.com/Jazee6/astro-blur" target="_blank">Astro
-            Blur</a> 0.3.1 </div> </div> </footer> </body></html>
+            Blur</a> 0.3.2 </div> </div> </footer> </body></html>
