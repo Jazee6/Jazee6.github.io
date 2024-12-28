@@ -1,1 +1,0 @@
-const e={title:"Hi! Jazee",language:"zh",description:"Jazee's personal blog. Powered by Astro Blog Theme Blur.",keywords:"Jazee, blog, personal blog, Astro, Astro Blog Theme Blur",author:"Jazee",avatar:"/avatar.png",favicon:"/favicon.png",site:"https://jaze.top",page_size:10};export{e as s};
