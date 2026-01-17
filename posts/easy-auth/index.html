@@ -1,0 +1,213 @@
+<!DOCTYPE html><html lang="zh"> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Astro v5.16.6"><meta name="msvalidate.01" content="075EB6C822EF6E2D3C6B525BFC1CE819"><link rel="icon" type="image/png" href="/favicon.png"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="Hi! Jazee" href="https://jaze.top/rss.xml"><!-- Canonical URL --><link rel="canonical" href="https://jaze.top/posts/easy-auth/"><!-- Primary Meta Tags --><title>Easy Auth - Hi! Jazee</title><meta name="title" content="Easy Auth - Hi! Jazee"><meta name="keywords" content="Jazee, blog, personal blog, Astro, Astro Blog Theme Blur"><meta name="description" content="Easy Auth 使用指南 - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta name="author" content="Jazee"><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://jaze.top/posts/easy-auth/"><meta property="og:title" content="Easy Auth - Hi! Jazee"><meta property="og:description" content="Easy Auth 使用指南 - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta property="og:image" content="https://jaze.top/avatar.png"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://jaze.top/posts/easy-auth/"><meta property="twitter:title" content="Easy Auth - Hi! Jazee"><meta property="twitter:description" content="Easy Auth 使用指南 - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta property="twitter:image" content="https://jaze.top/avatar.png"><script type="text/javascript">
+    const script = document.createElement('script');
+    script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4347903407622409";
+    script.crossOrigin = "anonymous";
+    script.async = true;
+    document.head.appendChild(script);
+
+    (function (c, l, a, r, i, t, y) {
+        c[a] = c[a] || function () {
+            (c[a].q = c[a].q || []).push(arguments)
+        };
+        t = l.createElement(r);
+        t.async = true;
+        t.src = "https://www.clarity.ms/tag/" + i;
+        y = l.getElementsByTagName(r)[0];
+        y.parentNode.insertBefore(t, y);
+    })(window, document, "clarity", "script", "n1gp18fncc");
+</script><script>
+    const setTheme = (theme) => {
+        document.documentElement.classList.add(theme);
+    }
+
+    let theme = (() => {
+        if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
+            return localStorage.getItem("theme");
+        }
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+        }
+        return "light";
+    })();
+
+    theme === "light" ? setTheme("light") : setTheme("dark");
+    localStorage.setItem("theme", theme);
+</script><link rel="stylesheet" href="/_astro/_page_.CKyF5_YC.css"></head> <body> <div id="search-container" class="fixed hidden inset-0 z-50 backdrop-blur-sm animate-in fade-in"> <div class="absolute top-16 left-1/2 -translate-x-1/2 container-global w-full h-full"> <form class="w-3/4 mx-auto max-md:w-full animate-in slide-in-from-top"> <label> <input name="search" autocomplete="off" placeholder="Search..." class="w-full outline-0 bg-base transition-all rounded-xl h-16 p-4 shadow-xl text-xl"> </label> </form> <div id="search-results" class="w-3/4 mx-auto max-md:w-full h-full overflow-y-auto rounded-xl mt-1"></div> </div> </div> <script>
+    const searchContainer = document.querySelector("#search-container");
+    const searchInput = searchContainer?.querySelector("input")
+    searchContainer?.addEventListener("click", (e) => {
+        if (e.target !== searchInput) {
+            searchContainer.classList.add("hidden")
+        }
+    })
+    searchContainer?.querySelector("form")?.addEventListener("submit", (e) => {
+        e.preventDefault()
+    })
+
+    const cancelablePromise = promise => {
+        const controller = new AbortController()
+        const signal = controller.signal
+
+        const wrappedPromise = new Promise((resolve, reject) => {
+            signal.addEventListener("abort", () => {
+                reject('Promise Aborted')
+            })
+
+            promise.then(resolve, reject)
+        })
+
+        return {
+            promise: wrappedPromise,
+            cancel: () => controller.abort()
+        }
+    }
+    let abort = null
+    searchInput.addEventListener("input", async e => {
+        if (e.target.dataset.loaded !== 'true') {
+            e.target.dataset.loaded = 'true'
+            window.pagefind = await import("/pagefind/pagefind.js");
+            pagefind.init()
+        }
+
+        const input = e.target.value.trim()
+        if (input.length) {
+            const search = await pagefind.debouncedSearch(input)
+            if (search === null) {
+                return
+            }
+
+            abort && abort()
+            const searchResults = document.querySelector("#search-results")
+            searchResults.innerHTML = ""
+            abort = cancelablePromise(new Promise(async resolve => {
+                for (const result of search.results) {
+                    const data = await result.data()
+                    searchResults.innerHTML += `
+                    <a href="${data.url}" class="block px-4 py-2 rounded-xl bg-base/80 blur-global animate-in fade-in mt-1 first:mt-0 hover:bg-base transition-all">
+                        <h2 class="text-xl font-bold line-clamp-1">${data.meta.title}</h2>
+                        <p class="line-clamp-3">${data.excerpt}</p>
+                    </a>
+                `
+                }
+                resolve()
+            })).cancel
+        }
+    })
+</script> <header class="fixed h-16 w-full blur-global z-10"> <div class="container-global h-full flex items-center"> <div class="text-xl font-bold cursor-pointer"> <a href="/">Hi! Jazee</a> </div> <nav class="ml-auto max-sm:hidden"> <a class="ml-8 hover:text-secondary transition-all" href="/projects">Projects</a><a class="ml-8 hover:text-secondary transition-all" href="/links">Links</a><a class="ml-8 hover:text-secondary transition-all" href="/about">About</a> </nav> <div class="ml-auto hidden max-sm:flex icon-button cursor-pointer relative group"> <svg width="1em" height="1em" class="w-6 h-6 m-auto" data-icon="material-symbols:menu-rounded">   <symbol id="ai:material-symbols:menu-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M4 18q-.425 0-.712-.288T3 17t.288-.712T4 16h16q.425 0 .713.288T21 17t-.288.713T20 18zm0-5q-.425 0-.712-.288T3 12t.288-.712T4 11h16q.425 0 .713.288T21 12t-.288.713T20 13zm0-5q-.425 0-.712-.288T3 7t.288-.712T4 6h16q.425 0 .713.288T21 7t-.288.713T20 8z"/></symbol><use href="#ai:material-symbols:menu-rounded"></use>  </svg> <nav class="absolute top-8 -left-full rounded-xl shadow-xl bg-base hidden group-hover:block animate-in fade-in"> <a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/projects"> Projects <svg width="1em" height="1em" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">   <symbol id="ai:material-symbols:chevron-right-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M12.6 12L8.7 8.1q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7z"/></symbol><use href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/links"> Links <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">   <use href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/about"> About <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">   <use href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a> </nav> </div> <button id="search" class="ml-4 icon-button"> <svg width="1em" height="1em" class="block w-6 h-6 m-auto" data-icon="material-symbols:search-rounded">   <symbol id="ai:material-symbols:search-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l5.6 5.6q.275.275.275.7t-.275.7t-.7.275t-.7-.275l-5.6-5.6q-.75.6-1.725.95T9.5 16m0-2q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"/></symbol><use href="#ai:material-symbols:search-rounded"></use>  </svg> </button> <button id="theme" class="ml-2 max-sm:ml-4 icon-button"></button> </div> </header> <script>
+    const searchButton = document.querySelector("#search");
+    searchButton.addEventListener("click", () => {
+        const searchContainer = document.querySelector("#search-container")
+        searchContainer.classList.toggle("hidden")
+        searchContainer.querySelector("input").focus()
+    })
+
+    document.documentElement.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
+            const searchContainer = document.querySelector("#search-container")
+            searchContainer.classList.remove("hidden")
+            setTimeout(() => {
+                searchContainer.querySelector("input").focus()
+            })
+        }
+        if (e.key === "Escape") {
+            const searchContainer = document.querySelector("#search-container")
+            searchContainer.classList.add("hidden")
+        }
+    })
+
+    const light = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 15q1.25 0 2.125-.875T15 12t-.875-2.125T12 9t-2.125.875T9 12t.875 2.125T12 15m0 2q-2.075 0-3.537-1.463T7 12t1.463-3.537T12 7t3.538 1.463T17 12t-1.463 3.538T12 17M2 13q-.425 0-.712-.288T1 12t.288-.712T2 11h2q.425 0 .713.288T5 12t-.288.713T4 13zm18 0q-.425 0-.712-.288T19 12t.288-.712T20 11h2q.425 0 .713.288T23 12t-.288.713T22 13zm-8-8q-.425 0-.712-.288T11 4V2q0-.425.288-.712T12 1t.713.288T13 2v2q0 .425-.288.713T12 5m0 18q-.425 0-.712-.288T11 22v-2q0-.425.288-.712T12 19t.713.288T13 20v2q0 .425-.288.713T12 23M5.65 7.05L4.575 6q-.3-.275-.288-.7t.288-.725q.3-.3.725-.3t.7.3L7.05 5.65q.275.3.275.7t-.275.7t-.687.288t-.713-.288M18 19.425l-1.05-1.075q-.275-.3-.275-.712t.275-.688q.275-.3.688-.287t.712.287L19.425 18q.3.275.288.7t-.288.725q-.3.3-.725.3t-.7-.3M16.95 7.05q-.3-.275-.288-.687t.288-.713L18 4.575q.275-.3.7-.288t.725.288q.3.3.3.725t-.3.7L18.35 7.05q-.3.275-.7.275t-.7-.275M4.575 19.425q-.3-.3-.3-.725t.3-.7l1.075-1.05q.3-.275.712-.275t.688.275q.3.275.288.688t-.288.712L6 19.425q-.275.3-.7.288t-.725-.288M12 12"/></svg>'
+    const dark = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21q-3.775 0-6.387-2.613T3 12q0-3.45 2.25-5.988T11 3.05q.325-.05.575.088t.4.362t.163.525t-.188.575q-.425.65-.638 1.375T11.1 7.5q0 2.25 1.575 3.825T16.5 12.9q.775 0 1.538-.225t1.362-.625q.275-.175.563-.162t.512.137q.25.125.388.375t.087.6q-.35 3.45-2.937 5.725T12 21m0-2q2.2 0 3.95-1.213t2.55-3.162q-.5.125-1 .2t-1 .075q-3.075 0-5.238-2.163T9.1 7.5q0-.5.075-1t.2-1q-1.95.8-3.163 2.55T5 12q0 2.9 2.05 4.95T12 19m-.25-6.75"/></svg>'
+
+    const switchTheme = (theme) => {
+        theme === 'light' ? document.documentElement.classList.replace('dark', 'light') : document.documentElement.classList.replace('light', 'dark')
+    }
+
+    const themeButton = document.querySelector("#theme");
+    theme === 'light' ? themeButton.innerHTML = light : themeButton.innerHTML = dark
+
+    themeButton.addEventListener("click", () => {
+        if (theme === "light") {
+            switchTheme("dark")
+            themeButton.innerHTML = dark
+            theme = "dark";
+        } else {
+            switchTheme("light")
+            themeButton.innerHTML = light
+            theme = "light";
+        }
+        localStorage.setItem("theme", theme);
+    });
+</script>  <main class="mt-20 mb-4"> <div class="container-global">  <div class="flex items-start"> <aside class="basis-[16rem] shrink-0 max-md:hidden sticky top-20 mr-4 bg-base transition-all rounded-xl p-2"> <ul> <li><a class="px-2 menu-item" href="#简介">简介</a> </li><li><a class="px-2 menu-item" href="#使用">使用</a> </li> </ul> </aside> <article class="article base-card grow" data-pagefind-body> <h1 id="Easy Auth">Easy Auth</h1> <div class="flex space-x-4 not-prose"> <div class="badge"> <svg width="1em" height="1em" class="w-6 h-6 mr-1" data-icon="material-symbols:edit-calendar-rounded">   <symbol id="ai:material-symbols:edit-calendar-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V3q0-.425.288-.712T7 2t.713.288T8 3v1h8V3q0-.425.288-.712T17 2t.713.288T18 3v1h1q.825 0 1.413.588T21 6v4.025q0 .425-.288.713t-.712.287t-.712-.288t-.288-.712V10H5v10h6q.425 0 .713.288T12 21t-.288.713T11 22zm9-1v-1.65q0-.2.075-.387t.225-.338l5.225-5.2q.225-.225.5-.325t.55-.1q.3 0 .575.113t.5.337l.925.925q.2.225.313.5t.112.55t-.1.563t-.325.512l-5.2 5.2q-.15.15-.337.225T16.65 22H15q-.425 0-.712-.287T14 21m6.575-4.6l.925-.975l-.925-.925l-.95.95z"/></symbol><use href="#ai:material-symbols:edit-calendar-rounded"></use>  </svg> 2026/1/17 </div>  </div> <p><img src="https://blog-cdn.jaze.top/2026/01/a698368ee0accb0d8928b028990020a3.avif" alt="banner"></p>
+<h2 id="简介">简介</h2>
+<p>Easy Auth 是基于Better Auth的OIDC &#x26; SSO provider，开源可自行部署，类似于Auth0、Okta等商业化身份认证服务。</p>
+<ul>
+<li>地址：<a href="https://account.jaze.top">https://account.jaze.top</a></li>
+<li>仓库：<a href="https://github.com/Jazee6/easy-auth">https://github.com/Jazee6/easy-auth</a></li>
+</ul>
+<p>多个 Web 应用和 小程序 可以使用 Easy Auth 作为统一的身份认证服务，用户只需注册一个账号即可登录所有接入的应用。</p>
+<h2 id="使用">使用</h2>
+<p>按<code>README</code>部署并设置为管理员</p>
+<p>进入Apps页面，创建一个新的应用</p>
+<p><img src="https://blog-cdn.jaze.top/2026/01/90b3ae9b5f9ccd180674200b5abe3b41.avif" alt=""></p>
+<p>可以填写多个回调地址，用于不同环境。请注意回调地址需要完全匹配</p>
+<p><img src="https://blog-cdn.jaze.top/2026/01/91087b97dbf162f923e7996f53290f83.avif" alt=""></p>
+<p>在Client App配置<code>Better Auth</code>的<code>genericOAuth</code>插件</p>
+<pre class="astro-code astro-code-themes one-light one-dark-pro" style="background-color:#FAFAFA;--shiki-dark-bg:#282c34;color:#383A42;--shiki-dark:#abb2bf; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#A626A4;--shiki-dark:#C678DD">export</span><span style="color:#A626A4;--shiki-dark:#C678DD"> const</span><span style="color:#986801;--shiki-dark:#E5C07B"> authConfig</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#C18401;--shiki-dark:#E5C07B"> BetterAuthOptions</span><span style="color:#0184BC;--shiki-dark:#56B6C2"> =</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">    database</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#4078F2;--shiki-dark:#61AFEF"> drizzleAdapter</span><span style="color:#383A42;--shiki-dark:#ABB2BF">(</span><span style="color:#383A42;--shiki-dark:#E5C07B">env</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#E45649;--shiki-dark:#E06C75">web_chat</span><span style="color:#383A42;--shiki-dark:#ABB2BF">, {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">        provider</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#50A14F;--shiki-dark:#98C379"> "sqlite"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">    }),</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">    plugins</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> [</span></span>
+<span class="line"><span style="color:#4078F2;--shiki-dark:#61AFEF">        genericOAuth</span><span style="color:#383A42;--shiki-dark:#ABB2BF">({</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">            config</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> [</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">                {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                    providerId</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#50A14F;--shiki-dark:#98C379"> "easy-auth"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                    clientId</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#E5C07B"> process</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#C18401;--shiki-dark:#E5C07B">env</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#986801;--shiki-dark:#E06C75">EASY_AUTH_CLIENT_ID</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                    clientSecret</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#E5C07B"> process</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#C18401;--shiki-dark:#E5C07B">env</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#986801;--shiki-dark:#E06C75">EASY_AUTH_CLIENT_SECRET</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                    discoveryUrl</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#E5C07B">                        process</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#C18401;--shiki-dark:#E5C07B">env</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#986801;--shiki-dark:#E06C75">NODE_ENV</span><span style="color:#0184BC;--shiki-dark:#56B6C2"> ===</span><span style="color:#50A14F;--shiki-dark:#98C379"> "production"</span></span>
+<span class="line"><span style="color:#0184BC;--shiki-dark:#C678DD">                            ?</span><span style="color:#50A14F;--shiki-dark:#98C379"> "https://account.jaze.top/api/auth/.well-known/openid-configuration"</span></span>
+<span class="line"><span style="color:#0184BC;--shiki-dark:#C678DD">                            :</span><span style="color:#50A14F;--shiki-dark:#98C379"> "http://localhost:3000/api/auth/.well-known/openid-configuration"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                    pkce</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#986801;--shiki-dark:#D19A66"> true</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                    scopes</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> [</span><span style="color:#50A14F;--shiki-dark:#98C379">"openid"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">, </span><span style="color:#50A14F;--shiki-dark:#98C379">"profile"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">, </span><span style="color:#50A14F;--shiki-dark:#98C379">"email"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">, </span><span style="color:#50A14F;--shiki-dark:#98C379">"offline_access"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">],</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                    overrideUserInfo</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#986801;--shiki-dark:#D19A66"> true</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">                },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">            ],</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">        }),</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">    ],</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">    trustedOrigins</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> [</span><span style="color:#383A42;--shiki-dark:#E5C07B">process</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#C18401;--shiki-dark:#E5C07B">env</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#986801;--shiki-dark:#E06C75">SITE_URL</span><span style="color:#383A42;--shiki-dark:#ABB2BF">],</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">    session</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">        cookieCache</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">            enabled</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#986801;--shiki-dark:#D19A66"> true</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">            maxAge</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#986801;--shiki-dark:#D19A66"> 5</span><span style="color:#0184BC;--shiki-dark:#56B6C2"> *</span><span style="color:#986801;--shiki-dark:#D19A66"> 60</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">        },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">    },</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">    advanced</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">        cookiePrefix</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#50A14F;--shiki-dark:#98C379"> "wc"</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">    },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">};</span></span></code></pre>
+<p>支持<a href="https://www.better-auth.com/docs/concepts/session-management#stateless-session-management">Stateless Mode</a>
+，无需数据库存储session，你可以添加以下配置固定User ID</p>
+<pre class="astro-code astro-code-themes one-light one-dark-pro" style="background-color:#FAFAFA;--shiki-dark-bg:#282c34;color:#383A42;--shiki-dark:#abb2bf; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#A626A4;--shiki-dark:#C678DD">export</span><span style="color:#A626A4;--shiki-dark:#C678DD"> const</span><span style="color:#986801;--shiki-dark:#E5C07B"> authConfig</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#C18401;--shiki-dark:#E5C07B"> BetterAuthOptions</span><span style="color:#0184BC;--shiki-dark:#56B6C2"> =</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#A0A1A7;--shiki-light-font-style:italic;--shiki-dark:#7F848E;--shiki-dark-font-style:italic">    // database: drizzleAdapter(env.web_chat, {</span></span>
+<span class="line"><span style="color:#A0A1A7;--shiki-light-font-style:italic;--shiki-dark:#7F848E;--shiki-dark-font-style:italic">    //     provider: "sqlite",</span></span>
+<span class="line"><span style="color:#A0A1A7;--shiki-light-font-style:italic;--shiki-dark:#7F848E;--shiki-dark-font-style:italic">    // }),</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">    databaseHooks</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">        user</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">            create</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#A0A1A7;--shiki-light-font-style:italic;--shiki-dark:#7F848E;--shiki-dark-font-style:italic">                // @ts-ignore</span></span>
+<span class="line"><span style="color:#4078F2;--shiki-dark:#61AFEF">                before</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> (</span><span style="color:#383A42;--shiki-light-font-style:inherit;--shiki-dark:#E06C75;--shiki-dark-font-style:italic">user</span><span style="color:#383A42;--shiki-dark:#ABB2BF">) </span><span style="color:#A626A4;--shiki-dark:#C678DD">=></span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#A626A4;--shiki-dark:#C678DD">                    return</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                        data</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#0184BC;--shiki-dark:#ABB2BF">                            ...</span><span style="color:#383A42;--shiki-dark:#E06C75">user</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E45649;--shiki-dark:#E06C75">                            id</span><span style="color:#0184BC;--shiki-dark:#ABB2BF">:</span><span style="color:#383A42;--shiki-dark:#E5C07B"> user</span><span style="color:#383A42;--shiki-dark:#ABB2BF">.</span><span style="color:#E45649;--shiki-dark:#E06C75">sub</span><span style="color:#383A42;--shiki-dark:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">                        },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">                    };</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">                },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">            },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">        },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">    },</span></span>
+<span class="line"><span style="color:#383A42;--shiki-dark:#ABB2BF">};</span></span></code></pre>
+<p>支持<a href="https://www.better-auth.com/docs/plugins/sso">SSO</a>插件，回调地址填写<code>/api/auth/sso/callback/easy-auth</code></p>
+<p>完整示例应用仓库：<a href="https://github.com/Jazee6/web-chat">Web Chat</a>，使用Cloudflare生态构建的多功能聊天应用</p> </article> </div>   </div> </main>  <footer class="mt-auto bg-base transition-all h-16 shrink-0 py-2"> <div class="container-global text-secondary text-sm flex flex-col justify-center h-full"> <div>&copy; 2026 Jazee</div> <div>
+Powered by <a class="text-primary hover:text-secondary hover:underline transition-all" href="https://github.com/Jazee6/astro-blur" target="_blank">Astro
+            Blur</a> 0.5.3 </div> </div> </footer> </body></html> <script type="module">function i(t,o=100){let e;return function(...n){clearTimeout(e),e=setTimeout(()=>{t(...n)},o)}}const c=document.querySelectorAll(".menu-item"),r=i(()=>{for(const t of c){const o=t.getAttribute("href"),e=document.querySelector(`[id="${o.slice(1)}"]`);e&&e.getBoundingClientRect().top-128<=0&&(c.forEach(s=>s.classList.remove("bg-hover")),t.classList.add("bg-hover"),history.replaceState(null,"",o))}});document.addEventListener("scroll",r);document.addEventListener("DOMContentLoaded",r);</script>
