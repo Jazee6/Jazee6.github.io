@@ -1,0 +1,334 @@
+<!DOCTYPE html><html lang="zh"> <head><!-- Global Metadata --><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="generator" content="Astro v6.4.4"><meta name="msvalidate.01" content="075EB6C822EF6E2D3C6B525BFC1CE819"><link rel="icon" type="image/png" href="/favicon.png"><link rel="sitemap" href="/sitemap-index.xml"><link rel="alternate" type="application/rss+xml" title="Hi! Jazee" href="https://jaze.top/rss.xml"><!-- Canonical URL --><link rel="canonical" href="https://jaze.top/posts/building-chat-room-is-own-server/"><!-- Primary Meta Tags --><title>I built a chat app where every room is its own server (on Cloudflare&#39;s edge) - Hi! Jazee</title><meta name="title" content="I built a chat app where every room is its own server (on Cloudflare's edge) - Hi! Jazee"><meta name="keywords" content="Jazee, blog, personal blog, Astro, Astro Blog Theme Blur"><meta name="description" content="How Durable Objects let you treat each chat room as an isolated stateful microservice with its own database, WebSocket connections, and WebRTC coordination, all without a traditional backend. - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta name="author" content="Jazee"><!-- Open Graph / Facebook --><meta property="og:type" content="website"><meta property="og:url" content="https://jaze.top/posts/building-chat-room-is-own-server/"><meta property="og:title" content="I built a chat app where every room is its own server (on Cloudflare's edge) - Hi! Jazee"><meta property="og:description" content="How Durable Objects let you treat each chat room as an isolated stateful microservice with its own database, WebSocket connections, and WebRTC coordination, all without a traditional backend. - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta property="og:image" content="https://jaze.top/avatar.png"><!-- Twitter --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://jaze.top/posts/building-chat-room-is-own-server/"><meta property="twitter:title" content="I built a chat app where every room is its own server (on Cloudflare's edge) - Hi! Jazee"><meta property="twitter:description" content="How Durable Objects let you treat each chat room as an isolated stateful microservice with its own database, WebSocket connections, and WebRTC coordination, all without a traditional backend. - Jazee's personal blog. Powered by Astro Blog Theme Blur."><meta property="twitter:image" content="https://jaze.top/avatar.png"><script type="text/javascript">
+    const script = document.createElement('script');
+    script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4347903407622409";
+    script.crossOrigin = "anonymous";
+    script.async = true;
+    document.head.appendChild(script);
+
+    (function (c, l, a, r, i, t, y) {
+        c[a] = c[a] || function () {
+            (c[a].q = c[a].q || []).push(arguments)
+        };
+        t = l.createElement(r);
+        t.async = true;
+        t.src = "https://www.clarity.ms/tag/" + i;
+        y = l.getElementsByTagName(r)[0];
+        y.parentNode.insertBefore(t, y);
+    })(window, document, "clarity", "script", "n1gp18fncc");
+</script><script>
+    const setTheme = (theme) => {
+        document.documentElement.classList.add(theme);
+    }
+
+    let theme = (() => {
+        if (typeof localStorage !== "undefined" && localStorage.getItem("theme")) {
+            return localStorage.getItem("theme");
+        }
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            return "dark";
+        }
+        return "light";
+    })();
+
+    theme === "light" ? setTheme("light") : setTheme("dark");
+    localStorage.setItem("theme", theme);
+</script><link rel="stylesheet" href="/_astro/BaseLayout.JWuCq0Ml.css"></head> <body> <div id="search-container" class="fixed hidden inset-0 z-50 backdrop-blur-sm animate-in fade-in"> <div class="absolute top-16 left-1/2 -translate-x-1/2 container-global w-full h-full"> <form class="w-3/4 mx-auto max-md:w-full animate-in slide-in-from-top"> <label> <input name="search" autocomplete="off" placeholder="Search..." class="w-full outline-0 bg-base transition-all rounded-xl h-16 p-4 shadow-xl text-xl"> </label> </form> <div id="search-results" class="w-3/4 mx-auto max-md:w-full h-full overflow-y-auto rounded-xl mt-1"></div> </div> </div> <script>
+    const searchContainer = document.querySelector("#search-container");
+    const searchInput = searchContainer?.querySelector("input")
+    searchContainer?.addEventListener("click", (e) => {
+        if (e.target !== searchInput) {
+            searchContainer.classList.add("hidden")
+        }
+    })
+    searchContainer?.querySelector("form")?.addEventListener("submit", (e) => {
+        e.preventDefault()
+    })
+
+    const cancelablePromise = promise => {
+        const controller = new AbortController()
+        const signal = controller.signal
+
+        const wrappedPromise = new Promise((resolve, reject) => {
+            signal.addEventListener("abort", () => {
+                reject(new Error('Promise Aborted'))
+            })
+
+            promise.then(resolve, reject)
+        })
+
+        return {
+            promise: wrappedPromise,
+            cancel: () => controller.abort()
+        }
+    }
+    let abort = null
+    searchInput.addEventListener("input", async e => {
+        if (e.target.dataset.loaded !== 'true') {
+            e.target.dataset.loaded = 'true'
+            window.pagefind = await import("/pagefind/pagefind.js");
+            pagefind.init()
+        }
+
+        const input = e.target.value.trim()
+        if (input.length) {
+            const search = await pagefind.debouncedSearch(input)
+            if (search === null) {
+                return
+            }
+
+            abort && abort()
+            const searchResults = document.querySelector("#search-results")
+            searchResults.innerHTML = ""
+            abort = cancelablePromise(new Promise(async resolve => {
+                for (const result of search.results) {
+                    const data = await result.data()
+                    searchResults.innerHTML += `
+                    <a href="${data.url}" class="block px-4 py-2 rounded-xl bg-base/80 blur-global animate-in fade-in mt-1 first:mt-0 hover:bg-base transition-all">
+                        <h2 class="text-xl font-bold line-clamp-1">${data.meta.title}</h2>
+                        <p class="line-clamp-3">${data.excerpt}</p>
+                    </a>
+                `
+                }
+                resolve()
+            })).cancel
+        }
+    })
+</script> <header class="fixed h-16 w-full blur-global z-10"> <div class="container-global h-full flex items-center"> <div class="text-xl font-bold cursor-pointer"> <a href="/">Hi! Jazee</a> </div> <nav class="ml-auto max-sm:hidden"> <a class="ml-8 hover:text-secondary transition-all" href="/projects">Projects</a><a class="ml-8 hover:text-secondary transition-all" href="/links">Links</a><a class="ml-8 hover:text-secondary transition-all" href="/about">About</a> </nav> <div class="ml-auto hidden max-sm:flex icon-button cursor-pointer relative group"> <svg width="1em" height="1em" class="w-6 h-6 m-auto" data-icon="material-symbols:menu-rounded">   <symbol id="ai:material-symbols:menu-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M4 18q-.425 0-.712-.288T3 17t.288-.712T4 16h16q.425 0 .713.288T21 17t-.288.713T20 18zm0-5q-.425 0-.712-.288T3 12t.288-.712T4 11h16q.425 0 .713.288T21 12t-.288.713T20 13zm0-5q-.425 0-.712-.288T3 7t.288-.712T4 6h16q.425 0 .713.288T21 7t-.288.713T20 8z"/></symbol><use href="#ai:material-symbols:menu-rounded"></use>  </svg> <nav class="absolute top-8 -left-full rounded-xl shadow-xl bg-base hidden group-hover:block animate-in fade-in"> <a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/projects"> Projects <svg width="1em" height="1em" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">   <symbol id="ai:material-symbols:chevron-right-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M12.6 12L8.7 8.1q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.6 4.6q.15.15.213.325t.062.375t-.062.375t-.213.325l-4.6 4.6q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7z"/></symbol><use href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/links"> Links <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">   <use href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a><a class="flex items-center pl-2 py-2 first:rounded-t-xl last:rounded-b-xl hover:bg-hover transition-all" href="/about"> About <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 ml-auto" data-icon="material-symbols:chevron-right-rounded">   <use href="#ai:material-symbols:chevron-right-rounded"></use>  </svg> </a> </nav> </div> <button id="search" class="ml-4 icon-button"> <svg width="1em" height="1em" class="block w-6 h-6 m-auto" data-icon="material-symbols:search-rounded">   <symbol id="ai:material-symbols:search-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l5.6 5.6q.275.275.275.7t-.275.7t-.7.275t-.7-.275l-5.6-5.6q-.75.6-1.725.95T9.5 16m0-2q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"/></symbol><use href="#ai:material-symbols:search-rounded"></use>  </svg> </button> <button id="theme" class="ml-2 max-sm:ml-4 icon-button"></button> </div> </header> <script>
+    const searchButton = document.querySelector("#search");
+    searchButton.addEventListener("click", () => {
+        const searchContainer = document.querySelector("#search-container")
+        searchContainer.classList.toggle("hidden")
+        searchContainer.querySelector("input").focus()
+    })
+
+    document.documentElement.addEventListener("keydown", (e) => {
+        if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
+            const searchContainer = document.querySelector("#search-container")
+            searchContainer.classList.remove("hidden")
+            setTimeout(() => {
+                searchContainer.querySelector("input").focus()
+            })
+        }
+        if (e.key === "Escape") {
+            const searchContainer = document.querySelector("#search-container")
+            searchContainer.classList.add("hidden")
+        }
+    })
+
+    const light = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 15q1.25 0 2.125-.875T15 12t-.875-2.125T12 9t-2.125.875T9 12t.875 2.125T12 15m0 2q-2.075 0-3.537-1.463T7 12t1.463-3.537T12 7t3.538 1.463T17 12t-1.463 3.538T12 17M2 13q-.425 0-.712-.288T1 12t.288-.712T2 11h2q.425 0 .713.288T5 12t-.288.713T4 13zm18 0q-.425 0-.712-.288T19 12t.288-.712T20 11h2q.425 0 .713.288T23 12t-.288.713T22 13zm-8-8q-.425 0-.712-.288T11 4V2q0-.425.288-.712T12 1t.713.288T13 2v2q0 .425-.288.713T12 5m0 18q-.425 0-.712-.288T11 22v-2q0-.425.288-.712T12 19t.713.288T13 20v2q0 .425-.288.713T12 23M5.65 7.05L4.575 6q-.3-.275-.288-.7t.288-.725q.3-.3.725-.3t.7.3L7.05 5.65q.275.3.275.7t-.275.7t-.687.288t-.713-.288M18 19.425l-1.05-1.075q-.275-.3-.275-.712t.275-.688q.275-.3.688-.287t.712.287L19.425 18q.3.275.288.7t-.288.725q-.3.3-.725.3t-.7-.3M16.95 7.05q-.3-.275-.288-.687t.288-.713L18 4.575q.275-.3.7-.288t.725.288q.3.3.3.725t-.3.7L18.35 7.05q-.3.275-.7.275t-.7-.275M4.575 19.425q-.3-.3-.3-.725t.3-.7l1.075-1.05q.3-.275.712-.275t.688.275q.3.275.288.688t-.288.712L6 19.425q-.275.3-.7.288t-.725-.288M12 12"/></svg>'
+    const dark = '<svg class="block w-6 h-6 m-auto" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21q-3.775 0-6.387-2.613T3 12q0-3.45 2.25-5.988T11 3.05q.325-.05.575.088t.4.362t.163.525t-.188.575q-.425.65-.638 1.375T11.1 7.5q0 2.25 1.575 3.825T16.5 12.9q.775 0 1.538-.225t1.362-.625q.275-.175.563-.162t.512.137q.25.125.388.375t.087.6q-.35 3.45-2.937 5.725T12 21m0-2q2.2 0 3.95-1.213t2.55-3.162q-.5.125-1 .2t-1 .075q-3.075 0-5.238-2.163T9.1 7.5q0-.5.075-1t.2-1q-1.95.8-3.163 2.55T5 12q0 2.9 2.05 4.95T12 19m-.25-6.75"/></svg>'
+
+    const switchTheme = (theme) => {
+        theme === 'light' ? document.documentElement.classList.replace('dark', 'light') : document.documentElement.classList.replace('light', 'dark')
+    }
+
+    const themeButton = document.querySelector("#theme");
+    theme === 'light' ? themeButton.innerHTML = light : themeButton.innerHTML = dark
+
+    themeButton.addEventListener("click", () => {
+        if (theme === "light") {
+            switchTheme("dark")
+            themeButton.innerHTML = dark
+            theme = "dark";
+        } else {
+            switchTheme("light")
+            themeButton.innerHTML = light
+            theme = "light";
+        }
+        localStorage.setItem("theme", theme);
+    });
+</script>  <main class="mt-20 mb-4"> <div class="container-global">  <div class="flex items-start"> <aside class="basis-[16rem] shrink-0 max-md:hidden sticky top-20 mr-4 bg-base transition-all rounded-xl p-2" data-headings="[&quot;the-problem-with-stateless-servers-for-stateful-rooms&quot;,&quot;each-room-as-a-durable-object&quot;,&quot;two-databases-one-orm&quot;,&quot;voice-calls-without-a-signaling-server&quot;,&quot;noise-suppression-that-actually-works&quot;,&quot;content-addressable-image-uploads&quot;,&quot;user-presence-with-the-idle-detection-api&quot;,&quot;document-picture-in-picture-for-multitasking&quot;,&quot;the-frontend-stack&quot;,&quot;what-id-do-differently&quot;,&quot;the-stack-summarized&quot;,&quot;try-it-or-build-your-own&quot;]"> <ul> <li> <a class="px-2 menu-item" href="#the-problem-with-stateless-servers-for-stateful-rooms"> The problem with stateless servers for stateful rooms </a>  </li><li> <a class="px-2 menu-item" href="#each-room-as-a-durable-object"> Each room as a Durable Object </a>  </li><li> <a class="px-2 menu-item" href="#two-databases-one-orm"> Two databases, one ORM </a>  </li><li> <a class="px-2 menu-item" href="#voice-calls-without-a-signaling-server"> Voice calls without a signaling server </a> <ul> <li> <a class="pl-6 pr-2 menu-item" href="#noise-suppression-that-actually-works"> Noise suppression that actually works </a> </li> </ul> </li><li> <a class="px-2 menu-item" href="#content-addressable-image-uploads"> Content-addressable image uploads </a>  </li><li> <a class="px-2 menu-item" href="#user-presence-with-the-idle-detection-api"> User presence with the Idle Detection API </a>  </li><li> <a class="px-2 menu-item" href="#document-picture-in-picture-for-multitasking"> Document Picture-in-Picture for multitasking </a>  </li><li> <a class="px-2 menu-item" href="#the-frontend-stack"> The frontend stack </a>  </li><li> <a class="px-2 menu-item" href="#what-id-do-differently"> What I’d do differently </a>  </li><li> <a class="px-2 menu-item" href="#the-stack-summarized"> The stack, summarized </a>  </li><li> <a class="px-2 menu-item" href="#try-it-or-build-your-own"> Try it or build your own </a>  </li> </ul> </aside> <article class="article base-card grow" data-pagefind-body> <h1 id="I built a chat app where every room is its own server (on Cloudflare's edge)">I built a chat app where every room is its own server (on Cloudflare&#39;s edge)</h1> <div class="flex space-x-2 not-prose flex-wrap gap-y-2"> <div class="badge"> <svg width="1em" height="1em" class="w-6 h-6 mr-1" data-icon="material-symbols:edit-calendar-rounded">   <symbol id="ai:material-symbols:edit-calendar-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V3q0-.425.288-.712T7 2t.713.288T8 3v1h8V3q0-.425.288-.712T17 2t.713.288T18 3v1h1q.825 0 1.413.588T21 6v4.025q0 .425-.288.713t-.712.287t-.712-.288t-.288-.712V10H5v10h6q.425 0 .713.288T12 21t-.288.713T11 22zm9-1v-1.65q0-.2.075-.387t.225-.338l5.225-5.2q.225-.225.5-.325t.55-.1q.3 0 .575.113t.5.337l.925.925q.2.225.313.5t.112.55t-.1.563t-.325.512l-5.2 5.2q-.15.15-.337.225T16.65 22H15q-.425 0-.712-.287T14 21m6.575-4.6l.925-.975l-.925-.925l-.95.95z"/></symbol><use href="#ai:material-symbols:edit-calendar-rounded"></use>  </svg> 2026/6/7 </div>  <a href="/tags/cloudflare"> <div class="badge"> <svg width="1em" height="1em" class="w-6 h-6 mr-1" data-icon="material-symbols:tag-rounded">   <symbol id="ai:material-symbols:tag-rounded" viewBox="0 0 24 24"><path fill="currentColor" d="m9 16l-.825 3.275q-.075.325-.325.525t-.6.2q-.475 0-.775-.375T6.3 18.8L7 16H4.275q-.5 0-.8-.387T3.3 14.75q.075-.35.35-.55t.625-.2H7.5l1-4H5.775q-.5 0-.8-.387T4.8 8.75q.075-.35.35-.55t.625-.2H9l.825-3.275Q9.9 4.4 10.15 4.2t.6-.2q.475 0 .775.375t.175.825L11 8h4l.825-3.275q.075-.325.325-.525t.6-.2q.475 0 .775.375t.175.825L17 8h2.725q.5 0 .8.387t.175.863q-.075.35-.35.55t-.625.2H16.5l-1 4h2.725q.5 0 .8.388t.175.862q-.075.35-.35.55t-.625.2H15l-.825 3.275q-.075.325-.325.525t-.6.2q-.475 0-.775-.375T12.3 18.8L13 16zm.5-2h4l1-4h-4z"/></symbol><use href="#ai:material-symbols:tag-rounded"></use>  </svg> Cloudflare </div> </a><a href="/tags/websocket"> <div class="badge"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 mr-1" data-icon="material-symbols:tag-rounded">   <use href="#ai:material-symbols:tag-rounded"></use>  </svg> WebSocket </div> </a><a href="/tags/webrtc"> <div class="badge"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 mr-1" data-icon="material-symbols:tag-rounded">   <use href="#ai:material-symbols:tag-rounded"></use>  </svg> WebRTC </div> </a><a href="/tags/react"> <div class="badge"> <svg width="1em" height="1em" viewBox="0 0 24 24" class="w-6 h-6 mr-1" data-icon="material-symbols:tag-rounded">   <use href="#ai:material-symbols:tag-rounded"></use>  </svg> React </div> </a> </div> <p>Most real-time chat apps share the same architecture: a fleet of stateless API servers, a Redis pub/sub layer for WebSocket fanout, and a PostgreSQL database sitting behind a connection pooler. It works, but it’s a lot of infrastructure for what is essentially “user sends message, other users see message.”</p>
+<p>I wanted to see if I could build something different. The result is <a href="https://chat.jaze.top">web-chat</a>, a real-time text and voice calling application where every single chat room runs as its own isolated server, with its own database, on Cloudflare’s edge network. No VMs, containers, or Redis involved. It runs on Durable Objects, D1, R2, and RealtimeKit.</p>
+<p>Here’s how it works and what I learned building it.</p>
+<h2 id="the-problem-with-stateless-servers-for-stateful-rooms">The problem with stateless servers for stateful rooms</h2>
+<p>A chat room is inherently stateful. At any given moment, you need to know who’s connected, what messages they’ve sent, and whether they’re in a voice call. The traditional approach spreads this state across multiple services: Redis for presence, a database for messages, and maybe another service for WebRTC signaling.</p>
+<p>Each of these services introduces latency. A message from User A bounces through the API server, into Redis, back out to the WebSocket connection of User B. If your API server crashes, you lose track of who’s connected. If Redis blips, messages get dropped.</p>
+<p>What if the room itself could hold its own state?</p>
+<h2 id="each-room-as-a-durable-object">Each room as a Durable Object</h2>
+<p>Cloudflare Durable Objects solve this by giving you a stateful, single-threaded compute unit that can persist data locally. In my implementation, each chat room maps to exactly one Durable Object instance. When you create a room, the system generates a unique DO ID:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> roomId</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> c.env.</span><span style="color:#005CC5;--shiki-dark:#79B8FF">ROOM</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">newUniqueId</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span></code></pre>
+<p>When a user opens the chat page, the Hono router on the Worker looks up the room in D1 (the global relational database), finds the corresponding DO stub, and proxies the WebSocket upgrade directly to it:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">app.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'/room/:id/ws'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, authMiddleware, </span><span style="color:#D73A49;--shiki-dark:#F97583">async</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#E36209;--shiki-dark:#FFAB70">c</span><span style="color:#24292E;--shiki-dark:#E1E4E8">) </span><span style="color:#D73A49;--shiki-dark:#F97583">=></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> roomId</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> c.req.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">param</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'id'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> stub</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> c.env.</span><span style="color:#005CC5;--shiki-dark:#79B8FF">ROOM</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">get</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(roomIdFromName);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> stub.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">fetch</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(c.req.raw.url, c.req.raw);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span></code></pre>
+<p>Inside the Durable Object, all WebSocket connections live in a <code>Map&#x3C;WebSocket, WsSession></code>. When a user sends a message, the DO broadcasts it to every connected client. There’s no pub/sub or message queue involved, just a loop over a Map.</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> [</span><span style="color:#005CC5;--shiki-dark:#79B8FF">ws</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, </span><span style="color:#005CC5;--shiki-dark:#79B8FF">session</span><span style="color:#24292E;--shiki-dark:#E1E4E8">] </span><span style="color:#D73A49;--shiki-dark:#F97583">of</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.sessions) {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ws.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">send</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">JSON</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stringify</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({ type: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'message'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, data: message }));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<p>This is dramatically simpler than the traditional architecture. The room handles its own presence, its own message routing, and its own persistence. If the DO gets evicted from memory (Cloudflare can hibernate idle objects), it rehydrates its session map from serialized WebSocket attachments on the next wake-up:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#6F42C1;--shiki-dark:#B392F0">constructor</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ctx, env) {</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">  this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.sessions </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#D73A49;--shiki-dark:#F97583"> new</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> Map</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">  // WebSockets survive hibernation. Rehydrate sessions.</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> ws</span><span style="color:#D73A49;--shiki-dark:#F97583"> of</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.ctx.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">getWebSockets</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">    const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> session</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> ws.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">deserializeAttachment</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#005CC5;--shiki-dark:#79B8FF">    this</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.sessions.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">set</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(ws, session);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span></code></pre>
+<h2 id="two-databases-one-orm">Two databases, one ORM</h2>
+<p>The most interesting architectural decision was how to store messages. I could have put everything in D1 (Cloudflare’s edge-distributed SQLite). But that would mean every message write goes over the network to D1, adding latency to the hot path.</p>
+<p>Instead, I split the storage into two layers:</p>
+<p><strong>D1</strong> stores relational metadata: users, rooms, favorites, auth sessions. Things you need to query across (like “all rooms a user has joined” or “favorite rooms”).</p>
+<p><strong>Durable SQLite</strong> stores per-room messages. Each Room DO gets its own embedded SQLite database that lives right next to the compute handling that room’s WebSocket connections.</p>
+<p>Both use Drizzle ORM, but with separate configurations:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// D1 config: users, rooms, auth</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">export</span><span style="color:#D73A49;--shiki-dark:#F97583"> default</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> defineConfig</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  dialect: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'sqlite'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  driver: </span><span style="color:#6F42C1;--shiki-dark:#B392F0">d1Http</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(migrationsFolder),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  schema: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'./server/src/lib/schema.ts'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  out: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'./server/drizzle/d1'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Durable SQLite config: messages per room</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">export</span><span style="color:#D73A49;--shiki-dark:#F97583"> default</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> defineConfig</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  dialect: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'sqlite'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  driver: </span><span style="color:#6F42C1;--shiki-dark:#B392F0">durableSqlite</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(migrationsFolder),</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  schema: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'./server/src/lib/do-schema.ts'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  out: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'./server/drizzle/room'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span></code></pre>
+<p>The trade-off is clear: I can’t easily run cross-room queries like “all messages by user X across all rooms.” But for a chat app, you almost never need that. What you do need is fast, reliable per-room message history with cursor-based pagination:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> messages</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> await</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> db</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">select</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">from</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(messagesTable)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">where</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">lt</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(messagesTable.createdAt, before))</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">orderBy</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">desc</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(messagesTable.createdAt))</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">limit</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">25</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span></code></pre>
+<p>Twenty-five messages per page, loaded when the user scrolls up. The <code>IntersectionObserver</code> on a sentinel element triggers the next page load, and scroll position is preserved so the reading flow doesn’t jump.</p>
+<p>This dual-database pattern is something I’d use again for any application where data naturally partitions by entity. Room messages belong with the room. User metadata belongs in a shared store.</p>
+<h2 id="voice-calls-without-a-signaling-server">Voice calls without a signaling server</h2>
+<p>Adding voice calling to a chat app usually means standing up a WebRTC signaling server. But when each room is already a stateful server with persistent WebSocket connections to every participant, you already have a signaling channel.</p>
+<p>I used Cloudflare RealtimeKit as the SFU (Selective Forwarding Unit) and <a href="https://github.com/nickstenning/partytracks">partytracks</a> to wrap the SFU protocol with an RxJS-based API. The coordination between peers happens entirely through the existing chat WebSocket.</p>
+<p>The flow works like this:</p>
+<ol>
+<li>User clicks “join call” → client sends <code>realtimeJoin</code> over the chat WebSocket</li>
+<li>The Durable Object broadcasts <code>realtimeStatus</code> to all connected clients</li>
+<li>Each client’s <code>PartyTracks</code> instance pushes its audio track to the SFU</li>
+<li>When a track is ready, the client sends <code>realtimeUpdate</code> with the session ID and track name</li>
+<li>Other clients receive the update and pull the corresponding audio track</li>
+</ol>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Client sends when their audio track is ready</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">ws.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">send</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">JSON</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stringify</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  type: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'realtimeUpdate'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  sessionId: session.id,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  trackName: track.name,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}));</span></span></code></pre>
+<p>Without a separate signaling server or SIP, the chat room’s WebSocket connection doubles as the WebRTC signaling channel. The Durable Object coordinates the whole thing because it already knows who’s connected.</p>
+<h3 id="noise-suppression-that-actually-works">Noise suppression that actually works</h3>
+<p>Raw microphone audio in a browser sounds terrible. Keyboard typing, fan noise, background chatter. I integrated Jitsi’s RNNoise-based AudioWorklet processor to clean up the audio stream before it hits the SFU:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> noiseSuppressedStream</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> applyNoiseSuppression</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(mediaStream);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> audioTrack</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> noiseSuppressedStream.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">getAudioTracks</span><span style="color:#24292E;--shiki-dark:#E1E4E8">()[</span><span style="color:#005CC5;--shiki-dark:#79B8FF">0</span><span style="color:#24292E;--shiki-dark:#E1E4E8">];</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">await</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> partyTracks.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">push</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#6F42C1;--shiki-dark:#B392F0">of</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(audioTrack));</span></span></code></pre>
+<p>Safari doesn’t support AudioWorklet-based transforms, so it falls back to the browser’s built-in <code>noiseSuppression</code>, <code>echoCancellation</code>, and <code>autoGainControl</code> constraints. Not as effective as RNNoise, but better than nothing.</p>
+<h2 id="content-addressable-image-uploads">Content-addressable image uploads</h2>
+<p>Image uploads in chat apps usually follow this pattern: upload to server, server stores in object storage, server returns URL. That’s three hops and the server becomes a bottleneck for large images.</p>
+<p>I built a content-addressable pipeline that deduplicates images at the storage level:</p>
+<ol>
+<li>Client converts the image to WebP using the Canvas API (smaller files, consistent format)</li>
+<li>Client computes SHA-256 hash of the file using <code>crypto.subtle.digest</code></li>
+<li>Client sends the hash list to the server requesting presigned upload URLs</li>
+<li>Server checks R2 for existing objects by hash key. If the exact same image already exists, it returns <code>url: null</code>. No upload needed.</li>
+<li>If it’s new, server generates a presigned PUT URL using <code>aws4fetch</code> (AWS Signature V4 signing)</li>
+<li>Client uploads directly to R2</li>
+</ol>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Server checks for duplicates before issuing presigned URLs</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> existing</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> await</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> env.</span><span style="color:#005CC5;--shiki-dark:#79B8FF">R2</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">head</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(hash);</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">if</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (existing) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  return</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> { hash, url: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">null</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }; </span><span style="color:#6A737D;--shiki-dark:#6A737D">// already stored</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> presignedUrl</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> await</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> signRequest</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  method: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'PUT'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  bucket: env.</span><span style="color:#005CC5;--shiki-dark:#79B8FF">R2_BUCKET</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  key: hash,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span></code></pre>
+<p>Images are served via <code>/room/images/:key</code> with <code>public, max-age=31536000, immutable</code> caching headers. Since the key is a content hash, the same image always maps to the same URL, and the CDN caches it forever.</p>
+<p>The message itself just stores the JSON array of SHA-256 hashes. The client resolves them to image URLs at render time. This means messages are small even when they contain multiple images.</p>
+<h2 id="user-presence-with-the-idle-detection-api">User presence with the Idle Detection API</h2>
+<p>Green/gray online indicators are table stakes for chat apps, but they’re usually wrong. Most implementations just check “is the WebSocket connected?” which means you show as online even if you’ve walked away from your computer.</p>
+<p>I used the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Idle_Detection_API">Idle Detection API</a> (Chrome and Edge only, for now) to detect actual user activity:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> controller</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> new</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> IdleDetector</span><span style="color:#24292E;--shiki-dark:#E1E4E8">();</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">controller.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">addEventListener</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'change'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">, () </span><span style="color:#D73A49;--shiki-dark:#F97583">=></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  ws.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">send</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#005CC5;--shiki-dark:#79B8FF">JSON</span><span style="color:#24292E;--shiki-dark:#E1E4E8">.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">stringify</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    type: </span><span style="color:#032F62;--shiki-dark:#9ECBFF">'status'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    userIdleStatus: controller.userState,    </span><span style="color:#6A737D;--shiki-dark:#6A737D">// 'active' or 'idle'</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    screenIdleStatus: controller.screenState, </span><span style="color:#6A737D;--shiki-dark:#6A737D">// 'locked' or 'unlocked'</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  }));</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">await</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> controller.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">start</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({ threshold: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">60000</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> }); </span><span style="color:#6A737D;--shiki-dark:#6A737D">// 60 seconds</span></span></code></pre>
+<p>The avatar badge shows green for active, yellow for idle, and gray for locked screen. It’s a small detail, but it makes the presence indicators actually useful instead of just decorative.</p>
+<h2 id="document-picture-in-picture-for-multitasking">Document Picture-in-Picture for multitasking</h2>
+<p>The <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API">Document Picture-in-Picture API</a> lets you pop out an entire web page into a floating window, not just a video element. I used it to let users keep the chat room visible while working in other tabs:</p>
+<pre class="astro-code astro-code-themes github-light github-dark" style="background-color:#fff;--shiki-dark-bg:#24292e;color:#24292e;--shiki-dark:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="typescript"><code><span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> pipWindow</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#D73A49;--shiki-dark:#F97583"> await</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> documentPictureInPicture.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">requestWindow</span><span style="color:#24292E;--shiki-dark:#E1E4E8">({</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  width: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">400</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  height: </span><span style="color:#005CC5;--shiki-dark:#79B8FF">600</span><span style="color:#24292E;--shiki-dark:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">});</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Copy styles into the PiP window</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">for</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> (</span><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> sheet</span><span style="color:#D73A49;--shiki-dark:#F97583"> of</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> document.styleSheets) {</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">  const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> style</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> document.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">createElement</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">'style'</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  style.textContent </span><span style="color:#D73A49;--shiki-dark:#F97583">=</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> Array.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">from</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(sheet.cssRules)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">map</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#E36209;--shiki-dark:#FFAB70">rule</span><span style="color:#D73A49;--shiki-dark:#F97583"> =></span><span style="color:#24292E;--shiki-dark:#E1E4E8"> rule.cssText)</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">    .</span><span style="color:#6F42C1;--shiki-dark:#B392F0">join</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(</span><span style="color:#032F62;--shiki-dark:#9ECBFF">''</span><span style="color:#24292E;--shiki-dark:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">  pipWindow.document.head.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">appendChild</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(style);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">}</span></span>
+<span class="line"><span style="color:#6A737D;--shiki-dark:#6A737D">// Render React components into the PiP window</span></span>
+<span class="line"><span style="color:#D73A49;--shiki-dark:#F97583">const</span><span style="color:#005CC5;--shiki-dark:#79B8FF"> root</span><span style="color:#D73A49;--shiki-dark:#F97583"> =</span><span style="color:#6F42C1;--shiki-dark:#B392F0"> createRoot</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(pipWindow.document.body);</span></span>
+<span class="line"><span style="color:#24292E;--shiki-dark:#E1E4E8">root.</span><span style="color:#6F42C1;--shiki-dark:#B392F0">render</span><span style="color:#24292E;--shiki-dark:#E1E4E8">(&#x3C;</span><span style="color:#6F42C1;--shiki-dark:#B392F0">Room</span><span style="color:#24292E;--shiki-dark:#E1E4E8"> {</span><span style="color:#D73A49;--shiki-dark:#F97583">...</span><span style="color:#6F42C1;--shiki-dark:#B392F0">props</span><span style="color:#24292E;--shiki-dark:#E1E4E8">} />);</span></span></code></pre>
+<p>This is still experimental (Chrome-only), but it’s a killer feature for a chat app. You get a full-featured floating chat window, not a stripped-down mini view.</p>
+<h2 id="the-frontend-stack">The frontend stack</h2>
+<p>The client is React 19 with the React Compiler enabled via <code>babel-plugin-react-compiler</code>. This gives automatic memoization without manually wrapping components in <code>useMemo</code> and <code>useCallback</code>. It’s one less thing to think about during development, and the performance is consistently good.</p>
+<p>State management uses TanStack Query v5 for server state (with infinite queries for paginated room lists) and <code>ahooks/useWebSocket</code> for the real-time connection with automatic reconnection. The <code>ky</code> HTTP client handles auth redirects transparently.</p>
+<p>Styling is Tailwind CSS 4 with Shadcn-style component primitives. The whole thing builds with Vite 8 and deploys as a static site.</p>
+<h2 id="what-id-do-differently">What I’d do differently</h2>
+<p><strong>Cross-room search is hard.</strong> Because messages live in per-room Durable SQLite instances, there’s no single database to run a full-text search across. If I needed global search, I’d have to either query each room individually (expensive) or maintain a separate search index (complex). For now, per-room history search is sufficient.</p>
+<p><strong>WebSocket state recovery is subtle.</strong> When a Durable Object hibernates and wakes up, the WebSocket connections survive but you need to carefully rehydrate your session state from <code>deserializeAttachment()</code>. I spent more time debugging this than I expected. The documentation exists but the edge cases are under-documented.</p>
+<p><strong>The partytracks patch.</strong> I had to patch <code>partytracks@0.0.55</code> to add <code>credentials: 'include'</code> to its internal fetch calls. The library doesn’t send cookies by default, which breaks authentication when proxying through your own server. Bun’s patch system made this easy, but it’s a dependency wart.</p>
+<p><strong>Browser compatibility is a real constraint.</strong> Idle Detection, Document PiP, and AudioWorklet noise suppression are all Chrome-only. Safari and Firefox users get a degraded experience. This is the cost of living on the bleeding edge.</p>
+<h2 id="the-stack-summarized">The stack, summarized</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Layer</th><th>Technology</th></tr></thead><tbody><tr><td>Compute</td><td>Cloudflare Workers + Hono</td></tr><tr><td>Room state</td><td>Durable Objects with Durable SQLite</td></tr><tr><td>Global data</td><td>Cloudflare D1</td></tr><tr><td>File storage</td><td>Cloudflare R2</td></tr><tr><td>Voice</td><td>Cloudflare RealtimeKit (SFU)</td></tr><tr><td>Auth</td><td>better-auth with OAuth PKCE</td></tr><tr><td>Frontend</td><td>React 19, React Compiler, Vite 8, Tailwind CSS 4</td></tr><tr><td>ORM</td><td>Drizzle (for both D1 and Durable SQLite)</td></tr></tbody></table>
+<p>Everything runs on Cloudflare’s edge network with smart placement enabled, so the Worker is automatically co-located near the D1 database and Durable Objects it talks to.</p>
+<h2 id="try-it-or-build-your-own">Try it or build your own</h2>
+<p>The source code is at <a href="https://github.com/Jazee6/web-chat">github.com/Jazee6/web-chat</a>. The live demo runs at <a href="https://chat.jaze.top">chat.jaze.top</a>.</p>
+<p>If you’re building real-time features and considering Cloudflare’s platform, the key insight is this: Durable Objects aren’t just key-value stores with a WebSocket. They’re genuinely stateful servers that can hold complex data structures, run embedded databases, and coordinate multi-party real-time sessions. The mental model shift from “stateless API + external state” to “the room is the server” takes some getting used to, but once it clicks, it simplifies everything.</p> </article> </div>   </div> </main>  <footer class="mt-auto bg-base transition-all h-16 shrink-0 py-2"> <div class="container-global text-secondary text-sm flex flex-col justify-center h-full"> <div>&copy; 2026 Jazee</div> <div>
+Powered by <a class="text-primary hover:text-secondary hover:underline transition-all" href="https://github.com/Jazee6/astro-blur" target="_blank">Astro
+            Blur</a> 0.7.0 </div> </div> </footer> </body></html> <script type="module">function u(c,o=100){let n;return function(...s){clearTimeout(n),n=setTimeout(()=>{c(...s)},o)}}const a=document.querySelector("[data-headings]");if(a){const c=JSON.parse(a.dataset.headings),o=document.querySelectorAll(".menu-item"),n=new Map,s=[];for(const e of o)n.set(e.getAttribute("href"),e);for(const e of c){const t=document.getElementById(e),i=n.get(`#${e}`);t&&i&&s.push({el:t,link:i})}const d=()=>{let e=null;for(const{el:t,link:i}of s)t.getBoundingClientRect().top<=128&&(e=i);o.forEach(t=>t.classList.remove("bg-hover")),e&&(e.classList.add("bg-hover"),history.replaceState(null,"",e.getAttribute("href")))},r=u(d);document.addEventListener("scroll",r);const l=()=>setTimeout(d,50);document.readyState==="loading"?document.addEventListener("DOMContentLoaded",l):l()}</script>
