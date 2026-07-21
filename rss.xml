@@ -1,26 +1,26 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Hi! Jazee</title><description>Jazee&apos;s personal blog. Powered by Astro Blog Theme Blur.</description><link>https://jaze.top/</link><item><title>I built a chat app where every room is its own server (on Cloudflare&apos;s edge)</title><link>https://jaze.top/posts/building-chat-room-is-own-server/</link><guid isPermaLink="true">https://jaze.top/posts/building-chat-room-is-own-server/</guid><description>How Durable Objects let you treat each chat room as an isolated stateful microservice with its own database, WebSocket connections, and WebRTC coordination, all without a traditional backend.</description><pubDate>Sat, 06 Jun 2026 00:00:00 GMT</pubDate><content:encoded>Most real-time chat apps share the same architecture: a fleet of stateless API servers, a Redis pub/sub layer for WebSocket fanout, and a PostgreSQL database sitting behind a connection pooler. It works, but it&apos;s a lot of infrastructure for what is essentially &quot;user sends message, other users see message.&quot;
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>Hi! Jazee</title><description>Jazee&apos;s personal blog. Powered by Astro Blog Theme Blur.</description><link>https://jaze.top/</link><item><title>我构建了一个每个房间都是独立服务器的聊天应用（运行在 Cloudflare 边缘网络）</title><link>https://jaze.top/posts/building-chat-room-is-own-server/</link><guid isPermaLink="true">https://jaze.top/posts/building-chat-room-is-own-server/</guid><description>如何利用 Durable Objects 把每个聊天房间当作一个隔离的有状态微服务，拥有自己的数据库、WebSocket 连接和 WebRTC 协调，全部无需传统后端。</description><pubDate>Sat, 06 Jun 2026 00:00:00 GMT</pubDate><content:encoded>大多数实时聊天应用都采用相同的架构：一组无状态 API 服务器、一层用于 WebSocket 扇出的 Redis pub/sub，以及位于连接池之后的 PostgreSQL 数据库。这套方案能用，但对于&quot;用户发消息、其他人看到消息&quot;这件本质上的小事来说，基础设施未免太重了。
 
-I wanted to see if I could build something different. The result is [web-chat](https://chat.jaze.top), a real-time text and voice calling application where every single chat room runs as its own isolated server, with its own database, on Cloudflare&apos;s edge network. No VMs, containers, or Redis involved. It runs on Durable Objects, D1, R2, and RealtimeKit.
+我想试试能不能做出不一样的东西。结果就是 [web-chat](https://chat.jaze.top)，一个实时文字和语音通话应用，其中每一个聊天房间都作为独立隔离的服务器运行，拥有自己的数据库，全部跑在 Cloudflare 的边缘网络上。没有虚拟机、容器，也没有 Redis。它基于 Durable Objects、D1、R2 和 RealtimeKit 构建。
 
-Here&apos;s how it works and what I learned building it.
+下面是它的工作原理以及我在构建过程中学到的东西。
 
-## The problem with stateless servers for stateful rooms
+## 无状态服务器处理有状态房间的问题
 
-A chat room is inherently stateful. At any given moment, you need to know who&apos;s connected, what messages they&apos;ve sent, and whether they&apos;re in a voice call. The traditional approach spreads this state across multiple services: Redis for presence, a database for messages, and maybe another service for WebRTC signaling.
+聊天房间天然是有状态的。在任何时刻，你都需要知道谁在线、他们发了什么消息、是否在语音通话中。传统做法把这种状态分散到多个服务中：Redis 维护在线状态，数据库存储消息，可能还有另一个服务处理 WebRTC 信令。
 
-Each of these services introduces latency. A message from User A bounces through the API server, into Redis, back out to the WebSocket connection of User B. If your API server crashes, you lose track of who&apos;s connected. If Redis blips, messages get dropped.
+这些服务各自都会引入延迟。用户 A 的消息要先经过 API 服务器、进入 Redis，再通过用户 B 的 WebSocket 连接推送出去。如果 API 服务器崩溃，你就会丢失连接状态。如果 Redis 抖动，消息就会丢失。
 
-What if the room itself could hold its own state?
+如果房间本身就能持有自己的状态呢？
 
-## Each room as a Durable Object
+## 每个房间都是一个 Durable Object
 
-Cloudflare Durable Objects solve this by giving you a stateful, single-threaded compute unit that can persist data locally. In my implementation, each chat room maps to exactly one Durable Object instance. When you create a room, the system generates a unique DO ID:
+Cloudflare Durable Objects 解决了这个问题——它提供了一种有状态、单线程的计算单元，可以在本地持久化数据。在我的实现中，每个聊天房间映射到唯一的 Durable Object 实例。创建房间时，系统会生成一个唯一的 DO ID：
 
 ```typescript
 const roomId = c.env.ROOM.newUniqueId();
 ```
 
-When a user opens the chat page, the Hono router on the Worker looks up the room in D1 (the global relational database), finds the corresponding DO stub, and proxies the WebSocket upgrade directly to it:
+当用户打开聊天页面时，Worker 上的 Hono 路由会在 D1（全局关系数据库）中查找房间，找到对应的 DO stub，然后把 WebSocket 升级请求直接代理给它：
 
 ```typescript
 app.get(&apos;/room/:id/ws&apos;, authMiddleware, async (c) =&gt; {
@@ -30,7 +30,7 @@ app.get(&apos;/room/:id/ws&apos;, authMiddleware, async (c) =&gt; {
 });
 ```
 
-Inside the Durable Object, all WebSocket connections live in a `Map&lt;WebSocket, WsSession&gt;`. When a user sends a message, the DO broadcasts it to every connected client. There&apos;s no pub/sub or message queue involved, just a loop over a Map.
+在 Durable Object 内部，所有 WebSocket 连接都保存在一个 `Map&lt;WebSocket, WsSession&gt;` 里。当用户发送消息时，DO 会把它广播给每一个已连接的客户端。这里没有 pub/sub，也没有消息队列，只是对 Map 做一次循环遍历。
 
 ```typescript
 for (const [ws, session] of this.sessions) {
@@ -38,12 +38,12 @@ for (const [ws, session] of this.sessions) {
 }
 ```
 
-This is dramatically simpler than the traditional architecture. The room handles its own presence, its own message routing, and its own persistence. If the DO gets evicted from memory (Cloudflare can hibernate idle objects), it rehydrates its session map from serialized WebSocket attachments on the next wake-up:
+这比传统架构简单得多。房间自己维护在线状态、消息路由和持久化。如果 DO 从内存中被驱逐（Cloudflare 会休眠空闲的对象），它会在下次唤醒时通过反序列化的 WebSocket attachment 重新恢复 session map：
 
 ```typescript
 constructor(ctx, env) {
   this.sessions = new Map();
-  // WebSockets survive hibernation. Rehydrate sessions.
+  // WebSockets 在休眠后依然存活。重新恢复 sessions。
   for (const ws of this.ctx.getWebSockets()) {
     const session = ws.deserializeAttachment();
     this.sessions.set(ws, session);
@@ -51,20 +51,20 @@ constructor(ctx, env) {
 }
 ```
 
-## Two databases, one ORM
+## 两套数据库，一个 ORM
 
-The most interesting architectural decision was how to store messages. I could have put everything in D1 (Cloudflare&apos;s edge-distributed SQLite). But that would mean every message write goes over the network to D1, adding latency to the hot path.
+最有意思的架构决策在于如何存储消息。我本可以把所有东西都塞进 D1（Cloudflare 边缘分布的 SQLite），但那样每条消息的写入都要走网络到 D1，给热路径增加延迟。
 
-Instead, I split the storage into two layers:
+所以我把存储拆成了两层：
 
-**D1** stores relational metadata: users, rooms, favorites, auth sessions. Things you need to query across (like &quot;all rooms a user has joined&quot; or &quot;favorite rooms&quot;).
+**D1** 存储关系型元数据：用户、房间、收藏、认证会话。这些是需要跨域查询的内容（比如&quot;用户加入的所有房间&quot;或&quot;收藏的房间&quot;）。
 
-**Durable SQLite** stores per-room messages. Each Room DO gets its own embedded SQLite database that lives right next to the compute handling that room&apos;s WebSocket connections.
+**Durable SQLite** 存储每个房间的消息。每个 Room DO 都拥有自己内嵌的 SQLite 数据库，就位于处理该房间 WebSocket 连接的计算资源旁边。
 
-Both use Drizzle ORM, but with separate configurations:
+两者都用 Drizzle ORM，但配置独立：
 
 ```typescript
-// D1 config: users, rooms, auth
+// D1 配置：用户、房间、认证
 export default defineConfig({
   dialect: &apos;sqlite&apos;,
   driver: d1Http(migrationsFolder),
@@ -72,7 +72,7 @@ export default defineConfig({
   out: &apos;./server/drizzle/d1&apos;,
 });
 
-// Durable SQLite config: messages per room
+// Durable SQLite 配置：每个房间的消息
 export default defineConfig({
   dialect: &apos;sqlite&apos;,
   driver: durableSqlite(migrationsFolder),
@@ -81,7 +81,7 @@ export default defineConfig({
 });
 ```
 
-The trade-off is clear: I can&apos;t easily run cross-room queries like &quot;all messages by user X across all rooms.&quot; But for a chat app, you almost never need that. What you do need is fast, reliable per-room message history with cursor-based pagination:
+权衡很明确：我没法轻松跑跨房间查询，比如&quot;用户 X 在所有房间里的全部消息&quot;。但对于聊天应用来说，你几乎从不需要这种查询。你真正需要的是快速、可靠的按房间消息历史，配合基于游标的分页：
 
 ```typescript
 const messages = await db
@@ -92,26 +92,26 @@ const messages = await db
   .limit(25);
 ```
 
-Twenty-five messages per page, loaded when the user scrolls up. The `IntersectionObserver` on a sentinel element triggers the next page load, and scroll position is preserved so the reading flow doesn&apos;t jump.
+每页 25 条消息，用户上滑时加载下一页。通过 `IntersectionObserver` 监听哨兵元素触发下一页加载，并保留滚动位置，确保阅读流不会跳动。
 
-This dual-database pattern is something I&apos;d use again for any application where data naturally partitions by entity. Room messages belong with the room. User metadata belongs in a shared store.
+这种双数据库模式我会再用到任何数据天然按实体分区的应用中。房间消息归房间所有，用户元数据归共享存储。
 
-## Voice calls without a signaling server
+## 无需信令服务器的语音通话
 
-Adding voice calling to a chat app usually means standing up a WebRTC signaling server. But when each room is already a stateful server with persistent WebSocket connections to every participant, you already have a signaling channel.
+给聊天应用加语音通话通常意味着要搭建一个 WebRTC 信令服务器。但当每个房间本身就是一个有状态服务器、与每个参与者保持持久 WebSocket 连接时，你已经有信令通道了。
 
-I used Cloudflare RealtimeKit as the SFU (Selective Forwarding Unit) and [partytracks](https://github.com/nickstenning/partytracks) to wrap the SFU protocol with an RxJS-based API. The coordination between peers happens entirely through the existing chat WebSocket.
+我用 Cloudflare RealtimeKit 作为 SFU（选择性转发单元），并用 [partytracks](https://github.com/nickstenning/partytracks) 把 SFU 协议封装成基于 RxJS 的 API。Peer 之间的协调全部通过现有的聊天 WebSocket 完成。
 
-The flow works like this:
+流程是这样的：
 
-1. User clicks &quot;join call&quot; → client sends `realtimeJoin` over the chat WebSocket
-2. The Durable Object broadcasts `realtimeStatus` to all connected clients
-3. Each client&apos;s `PartyTracks` instance pushes its audio track to the SFU
-4. When a track is ready, the client sends `realtimeUpdate` with the session ID and track name
-5. Other clients receive the update and pull the corresponding audio track
+1. 用户点击&quot;加入通话&quot; -&gt; 客户端通过聊天 WebSocket 发送 `realtimeJoin`
+2. Durable Object 向所有已连接客户端广播 `realtimeStatus`
+3. 每个客户端的 `PartyTracks` 实例把它的音频轨道推送到 SFU
+4. 当轨道就绪时，客户端发送 `realtimeUpdate`，附带 session ID 和轨道名
+5. 其他客户端收到更新后拉取对应的音频轨道
 
 ```typescript
-// Client sends when their audio track is ready
+// 客户端在音频轨道就绪时发送
 ws.send(JSON.stringify({
   type: &apos;realtimeUpdate&apos;,
   sessionId: session.id,
@@ -119,11 +119,11 @@ ws.send(JSON.stringify({
 }));
 ```
 
-Without a separate signaling server or SIP, the chat room&apos;s WebSocket connection doubles as the WebRTC signaling channel. The Durable Object coordinates the whole thing because it already knows who&apos;s connected.
+没有单独的信令服务器，也没有 SIP，聊天房间的 WebSocket 连接同时充当了 WebRTC 信令通道。Durable Object 协调整个过程，因为它本来就知道谁在线。
 
-### Noise suppression that actually works
+### 真正有效的降噪
 
-Raw microphone audio in a browser sounds terrible. Keyboard typing, fan noise, background chatter. I integrated Jitsi&apos;s RNNoise-based AudioWorklet processor to clean up the audio stream before it hits the SFU:
+浏览器里原始的麦克风音频听起来很糟糕。键盘敲击声、风扇噪声、背景人声。我集成了 Jitsi 基于 RNNoise 的 AudioWorklet 处理器，在音频流送到 SFU 之前先做净化：
 
 ```typescript
 const noiseSuppressedStream = await applyNoiseSuppression(mediaStream);
@@ -131,26 +131,26 @@ const audioTrack = noiseSuppressedStream.getAudioTracks()[0];
 await partyTracks.push(of(audioTrack));
 ```
 
-Safari doesn&apos;t support AudioWorklet-based transforms, so it falls back to the browser&apos;s built-in `noiseSuppression`, `echoCancellation`, and `autoGainControl` constraints. Not as effective as RNNoise, but better than nothing.
+Safari 不支持基于 AudioWorklet 的变换，所以会回退到浏览器内建的 `noiseSuppression`、`echoCancellation` 和 `autoGainControl` 约束。效果不如 RNNoise，但聊胜于无。
 
-## Content-addressable image uploads
+## 内容寻址的图片上传
 
-Image uploads in chat apps usually follow this pattern: upload to server, server stores in object storage, server returns URL. That&apos;s three hops and the server becomes a bottleneck for large images.
+聊天应用里的图片上传通常遵循这样的模式：上传到服务器、服务器存到对象存储、服务器返回 URL。这是三次跳转，服务器会沦为处理大图片的瓶颈。
 
-I built a content-addressable pipeline that deduplicates images at the storage level:
+我构建了一条内容寻址的流水线，在存储层对图片做去重：
 
-1. Client converts the image to WebP using the Canvas API (smaller files, consistent format)
-2. Client computes SHA-256 hash of the file using `crypto.subtle.digest`
-3. Client sends the hash list to the server requesting presigned upload URLs
-4. Server checks R2 for existing objects by hash key. If the exact same image already exists, it returns `url: null`. No upload needed.
-5. If it&apos;s new, server generates a presigned PUT URL using `aws4fetch` (AWS Signature V4 signing)
-6. Client uploads directly to R2
+1. 客户端用 Canvas API 把图片转成 WebP（更小的文件、统一的格式）
+2. 客户端用 `crypto.subtle.digest` 计算文件的 SHA-256 哈希
+3. 客户端把哈希列表发给服务器，请求预签名上传 URL
+4. 服务器按哈希键在 R2 中检查是否已有对象。如果完全相同的图片已存在，就返回 `url: null`，无需上传
+5. 如果是新图，服务器用 `aws4fetch`（AWS Signature V4 签名）生成预签名 PUT URL
+6. 客户端直接上传到 R2
 
 ```typescript
-// Server checks for duplicates before issuing presigned URLs
+// 服务器在签发预签名 URL 前检查重复
 const existing = await env.R2.head(hash);
 if (existing) {
-  return { hash, url: null }; // already stored
+  return { hash, url: null }; // 已存储
 }
 const presignedUrl = await signRequest({
   method: &apos;PUT&apos;,
@@ -159,40 +159,40 @@ const presignedUrl = await signRequest({
 });
 ```
 
-Images are served via `/room/images/:key` with `public, max-age=31536000, immutable` caching headers. Since the key is a content hash, the same image always maps to the same URL, and the CDN caches it forever.
+图片通过 `/room/images/:key` 提供，附带 `public, max-age=31536000, immutable` 缓存头。因为键是内容哈希，同一张图片始终映射到同一个 URL，CDN 可以永久缓存。
 
-The message itself just stores the JSON array of SHA-256 hashes. The client resolves them to image URLs at render time. This means messages are small even when they contain multiple images.
+消息本身只存储 SHA-256 哈希的 JSON 数组。客户端在渲染时把它们解析成图片 URL。这意味着即使消息包含多张图片，消息体依然很小。
 
-## User presence with the Idle Detection API
+## 用 Idle Detection API 实现用户在线状态
 
-Green/gray online indicators are table stakes for chat apps, but they&apos;re usually wrong. Most implementations just check &quot;is the WebSocket connected?&quot; which means you show as online even if you&apos;ve walked away from your computer.
+绿/灰在线指示器是聊天应用的标配，但大多数都不准。多数实现只检查&quot;WebSocket 是否连接&quot;，这意味着即使你离开电脑，也会显示在线。
 
-I used the [Idle Detection API](https://developer.mozilla.org/en-US/docs/Web/API/Idle_Detection_API) (Chrome and Edge only, for now) to detect actual user activity:
+我用 [Idle Detection API](https://developer.mozilla.org/en-US/docs/Web/API/Idle_Detection_API)（目前仅 Chrome 和 Edge 支持）来检测真实的用户活动：
 
 ```typescript
 const controller = new IdleDetector();
 controller.addEventListener(&apos;change&apos;, () =&gt; {
   ws.send(JSON.stringify({
     type: &apos;status&apos;,
-    userIdleStatus: controller.userState,    // &apos;active&apos; or &apos;idle&apos;
-    screenIdleStatus: controller.screenState, // &apos;locked&apos; or &apos;unlocked&apos;
+    userIdleStatus: controller.userState,    // &apos;active&apos; 或 &apos;idle&apos;
+    screenIdleStatus: controller.screenState, // &apos;locked&apos; 或 &apos;unlocked&apos;
   }));
 });
-await controller.start({ threshold: 60000 }); // 60 seconds
+await controller.start({ threshold: 60000 }); // 60 秒
 ```
 
-The avatar badge shows green for active, yellow for idle, and gray for locked screen. It&apos;s a small detail, but it makes the presence indicators actually useful instead of just decorative.
+头像徽章在活跃时显示绿色、空闲时黄色、锁屏时灰色。这是个细节，但它让在线状态指示器真正有用，而不只是装饰。
 
-## Document Picture-in-Picture for multitasking
+## 用 Document Picture-in-Picture 实现多任务
 
-The [Document Picture-in-Picture API](https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API) lets you pop out an entire web page into a floating window, not just a video element. I used it to let users keep the chat room visible while working in other tabs:
+[Document Picture-in-Picture API](https://developer.mozilla.org/en-US/docs/Web/API/Document_Picture-in-Picture_API) 可以把整个网页弹出到一个浮动窗口里，而不只是视频元素。我用它让用户在其他标签页工作时，依然能看到聊天房间：
 
 ```typescript
 const pipWindow = await documentPictureInPicture.requestWindow({
   width: 400,
   height: 600,
 });
-// Copy styles into the PiP window
+// 把样式复制到 PiP 窗口
 for (const sheet of document.styleSheets) {
   const style = document.createElement(&apos;style&apos;);
   style.textContent = Array.from(sheet.cssRules)
@@ -200,51 +200,51 @@ for (const sheet of document.styleSheets) {
     .join(&apos;&apos;);
   pipWindow.document.head.appendChild(style);
 }
-// Render React components into the PiP window
+// 把 React 组件渲染到 PiP 窗口
 const root = createRoot(pipWindow.document.body);
 root.render(&lt;Room {...props} /&gt;);
 ```
 
-This is still experimental (Chrome-only), but it&apos;s a killer feature for a chat app. You get a full-featured floating chat window, not a stripped-down mini view.
+这仍是实验特性（仅 Chrome 支持），但对聊天应用来说是杀手级功能。你能得到一个功能完整的浮动聊天窗口，而不是缩水版的小视图。
 
-## The frontend stack
+## 前端技术栈
 
-The client is React 19 with the React Compiler enabled via `babel-plugin-react-compiler`. This gives automatic memoization without manually wrapping components in `useMemo` and `useCallback`. It&apos;s one less thing to think about during development, and the performance is consistently good.
+客户端是 React 19，通过 `babel-plugin-react-compiler` 启用了 React Compiler。这带来了自动 memoization，无需手动用 `useMemo` 和 `useCallback` 包裹组件。开发时少一件事要操心，性能也始终不错。
 
-State management uses TanStack Query v5 for server state (with infinite queries for paginated room lists) and `ahooks/useWebSocket` for the real-time connection with automatic reconnection. The `ky` HTTP client handles auth redirects transparently.
+状态管理上，服务端状态用 TanStack Query v5（用无限查询做分页房间列表），实时连接用 `ahooks/useWebSocket` 并自动重连。`ky` HTTP 客户端透明地处理认证跳转。
 
-Styling is Tailwind CSS 4 with Shadcn-style component primitives. The whole thing builds with Vite 8 and deploys as a static site.
+样式是 Tailwind CSS 4 配合 Shadcn 风格的组件原语。整个项目用 Vite 8 构建，作为静态站点部署。
 
-## What I&apos;d do differently
+## 如果重来我会怎么做
 
-**Cross-room search is hard.** Because messages live in per-room Durable SQLite instances, there&apos;s no single database to run a full-text search across. If I needed global search, I&apos;d have to either query each room individually (expensive) or maintain a separate search index (complex). For now, per-room history search is sufficient.
+**跨房间搜索很难。** 因为消息分散在每个房间的 Durable SQLite 实例里，没有单一的数据库可以做全文搜索。如果需要全局搜索，要么逐个房间查询（代价高），要么维护一个独立的搜索索引（复杂）。目前按房间历史搜索已经够用。
 
-**WebSocket state recovery is subtle.** When a Durable Object hibernates and wakes up, the WebSocket connections survive but you need to carefully rehydrate your session state from `deserializeAttachment()`. I spent more time debugging this than I expected. The documentation exists but the edge cases are under-documented.
+**WebSocket 状态恢复很微妙。** 当 Durable Object 休眠又唤醒时，WebSocket 连接会存活，但你需要小心地从 `deserializeAttachment()` 恢复 session 状态。我在这方面调试的时间比预期长得多。文档是有的，但边界情况文档不足。
 
-**The partytracks patch.** I had to patch `partytracks@0.0.55` to add `credentials: &apos;include&apos;` to its internal fetch calls. The library doesn&apos;t send cookies by default, which breaks authentication when proxying through your own server. Bun&apos;s patch system made this easy, but it&apos;s a dependency wart.
+**partytracks 的补丁。** 我不得不给 `partytracks@0.0.55` 打补丁，给它的内部 fetch 调用加上 `credentials: &apos;include&apos;`。这个库默认不发送 cookie，当通过自己的服务器代理时会破坏认证。Bun 的 patch 系统让这件事很简单，但这是个依赖上的小瑕疵。
 
-**Browser compatibility is a real constraint.** Idle Detection, Document PiP, and AudioWorklet noise suppression are all Chrome-only. Safari and Firefox users get a degraded experience. This is the cost of living on the bleeding edge.
+**浏览器兼容性是真实的约束。** Idle Detection、Document PiP 和 AudioWorklet 降噪都是 Chrome 独占。Safari 和 Firefox 用户会得到降级的体验。这就是活在最前沿的代价。
 
-## The stack, summarized
+## 技术栈一览
 
-| Layer | Technology |
+| 层级 | 技术 |
 |-------|-----------|
-| Compute | Cloudflare Workers + Hono |
-| Room state | Durable Objects with Durable SQLite |
-| Global data | Cloudflare D1 |
-| File storage | Cloudflare R2 |
-| Voice | Cloudflare RealtimeKit (SFU) |
-| Auth | better-auth with OAuth PKCE |
-| Frontend | React 19, React Compiler, Vite 8, Tailwind CSS 4 |
-| ORM | Drizzle (for both D1 and Durable SQLite) |
+| 计算 | Cloudflare Workers + Hono |
+| 房间状态 | Durable Objects + Durable SQLite |
+| 全局数据 | Cloudflare D1 |
+| 文件存储 | Cloudflare R2 |
+| 语音 | Cloudflare RealtimeKit (SFU) |
+| 认证 | better-auth + OAuth PKCE |
+| 前端 | React 19、React Compiler、Vite 8、Tailwind CSS 4 |
+| ORM | Drizzle（同时用于 D1 和 Durable SQLite） |
 
-Everything runs on Cloudflare&apos;s edge network with smart placement enabled, so the Worker is automatically co-located near the D1 database and Durable Objects it talks to.
+所有东西都跑在 Cloudflare 的边缘网络上，并启用了 smart placement，所以 Worker 会自动与它通信的 D1 数据库和 Durable Objects 协同部署在同一区域。
 
-## Try it or build your own
+## 试用或自建
 
-The source code is at [github.com/Jazee6/web-chat](https://github.com/Jazee6/web-chat). The live demo runs at [chat.jaze.top](https://chat.jaze.top).
+源码位于 [github.com/Jazee6/web-chat](https://github.com/Jazee6/web-chat)，在线演示在 [chat.jaze.top](https://chat.jaze.top)。
 
-If you&apos;re building real-time features and considering Cloudflare&apos;s platform, the key insight is this: Durable Objects aren&apos;t just key-value stores with a WebSocket. They&apos;re genuinely stateful servers that can hold complex data structures, run embedded databases, and coordinate multi-party real-time sessions. The mental model shift from &quot;stateless API + external state&quot; to &quot;the room is the server&quot; takes some getting used to, but once it clicks, it simplifies everything.</content:encoded></item><item><title>Cloudflare AI Web 4.0</title><link>https://jaze.top/posts/cloudflare-ai-web-40/</link><guid isPermaLink="true">https://jaze.top/posts/cloudflare-ai-web-40/</guid><description>Cloudflare AI Web 4.0正式推出</description><pubDate>Tue, 30 Sep 2025 00:00:00 GMT</pubDate><content:encoded>![banner](https://blog-cdn.jaze.top/2025/09/71724a1cf8d68bb6701a938ff9cc38a9)
+如果你正在构建实时功能、考虑 Cloudflare 平台，关键洞察是：Durable Objects 不只是带 WebSocket 的键值存储。它们是真正的有状态服务器，能持有复杂数据结构、运行内嵌数据库、协调多方实时会话。从&quot;无状态 API + 外部状态&quot;到&quot;房间即服务器&quot;的心智模型转变需要一些适应，但一旦想通，所有东西都会简化。</content:encoded></item><item><title>Cloudflare AI Web 4.0</title><link>https://jaze.top/posts/cloudflare-ai-web-40/</link><guid isPermaLink="true">https://jaze.top/posts/cloudflare-ai-web-40/</guid><description>Cloudflare AI Web 4.0正式推出</description><pubDate>Tue, 30 Sep 2025 00:00:00 GMT</pubDate><content:encoded>![banner](https://blog-cdn.jaze.top/2025/09/71724a1cf8d68bb6701a938ff9cc38a9)
 
 Cloudflare AI Web 4.0 正式发布。这是一次从底层到体验的「完全重构」：项目从 Nuxt 迁移到 Next.js 15，配合全新的 AI SDK
 流式能力与本地优先的数据存储，让部署更简单、体验更顺滑、扩展更轻松。
