@@ -1,0 +1,1 @@
+import{t as e}from"./medium-zoom.esm.DzpLq2ku.js";e(`[data-zoomable]`,{margin:24,background:`rgba(0, 0, 0, 0.85)`});
