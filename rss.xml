@@ -325,6 +325,7 @@ export const authConfig: BetterAuthOptions = {
                     pkce: true,
                     scopes: [&quot;openid&quot;, &quot;profile&quot;, &quot;email&quot;, &quot;offline_access&quot;],
                     overrideUserInfo: true,
+                    authentication: &quot;basic&quot;,
                 },
             ],
         }),
