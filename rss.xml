@@ -316,16 +316,12 @@ export const authConfig: BetterAuthOptions = {
             config: [
                 {
                     providerId: &quot;easy-auth&quot;,
+                    discoveryUrl: `${process.env.EASY_AUTH_URL}/api/auth/.well-known/openid-configuration`,
                     clientId: process.env.EASY_AUTH_CLIENT_ID,
                     clientSecret: process.env.EASY_AUTH_CLIENT_SECRET,
-                    discoveryUrl:
-                        process.env.NODE_ENV === &quot;production&quot;
-                            ? &quot;https://account.jaze.top/api/auth/.well-known/openid-configuration&quot;
-                            : &quot;http://localhost:3000/api/auth/.well-known/openid-configuration&quot;,
-                    pkce: true,
-                    scopes: [&quot;openid&quot;, &quot;profile&quot;, &quot;email&quot;, &quot;offline_access&quot;],
-                    overrideUserInfo: true,
                     authentication: &quot;basic&quot;,
+                    scopes: [&quot;openid&quot;, &quot;profile&quot;, &quot;email&quot;],
+                    overrideUserInfo: true,
                 },
             ],
         }),
